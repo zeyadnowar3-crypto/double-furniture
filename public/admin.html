@@ -798,10 +798,11 @@
             <table>
               <thead>
                 <tr>
-                  <th style="width: 80px;">الصورة</th>
+                  <th style="width: 90px;">معرض الصور</th>
                   <th>اسم الموديل</th>
                   <th>القسم</th>
                   <th>السعر للعميل</th>
+                  <th>الكمية المتاحة</th>
                   <th>الوصف والمقاسات</th>
                   <th>الحالة</th>
                   <th>إجراءات</th>
@@ -1058,20 +1059,40 @@
           </div>
         </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">الكمية المتوفرة بالمخزن / المعرض (عدد الأطقم) *</label>
+            <input type="number" id="prodFormStock" class="form-input" min="0" value="1" placeholder="مثال: 1 أو 3" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">حالة العرض بالمعرض للعملاء</label>
+            <select id="prodFormAvailable" class="form-select">
+              <option value="1">معروض ومتاح للطلب ✓</option>
+              <option value="0">مخفي مؤقتاً ✕</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">الوصف والمقاسات والخامات</label>
           <textarea id="prodFormDesc" class="form-textarea" rows="2" placeholder="المقاس، نوع الخشب، نوع القماش، كثافة الإسفنج..."></textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-label">صورة الموديل</label>
-          <div class="img-upload-dropzone" onclick="document.getElementById('prodImgFile').click()">
-            <div style="font-size: 28px; margin-bottom: 6px;">📷</div>
-            <div style="font-size: 13px; font-weight: 700;">اضغط هنا لاختيار صورة من جهازك</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP</div>
-            <input type="file" id="prodImgFile" accept="image/*" style="display: none;" onchange="handleImagePicked(event)">
-            <img id="prodImgPreview" class="preview-thumb" src="" alt="معاينة">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin-bottom: 0;">📸 معرض صور الطقم (تقدر ترفع كذا صورة مش واحدة)</label>
+            <span id="prodImagesCountText" style="font-size: 12px; color: var(--accent-gold); font-weight: 700;">0 صور</span>
           </div>
+
+          <div class="img-upload-dropzone" onclick="document.getElementById('prodImgFiles').click()" style="cursor: pointer; padding: 16px 12px; border: 2px dashed #475569; border-radius: 12px; text-align: center; background: rgba(30, 41, 59, 0.5); transition: border-color 0.2s;">
+            <div style="font-size: 32px; margin-bottom: 4px;">📷 ➕</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff;">اضغط هنا لاختيار صور من جهازك (تقدر تختار كذا صورة مع بعض)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP — صور زوايا الطقم، الكنبة، الكراسي، القماش، الألوان...</div>
+            <input type="file" id="prodImgFiles" accept="image/*" multiple style="display: none;" onchange="handleMultipleImagesPicked(event)">
+          </div>
+
+          <!-- شبكة الصور المصغرة مع تحديد الغلاف وحذف أي صورة -->
+          <div id="prodImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 12px;"></div>
         </div>
 
         <div class="modal-actions">
@@ -1752,6 +1773,8 @@
     }
 
     // ================= إدارة المنتجات والمعرض =================
+    let currentProductImages = []; // عناصر: { type: 'existing', url: '...' } أو { type: 'new', base64: '...' }
+
     async function loadProducts() {
       try {
         const res = await fetch('/api/admin/products', { headers: getAdminHeaders() });
@@ -1766,38 +1789,122 @@
     function renderProductsTable(list) {
       const tbody = document.getElementById('productsTableBody');
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">لا توجد موديلات مضافة حالياً. اضغط "إضافة موديل أثاث جديد".</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا توجد موديلات مضافة حالياً. اضغط "إضافة موديل أثاث جديد".</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = list.map(p => `
-        <tr>
-          <td>
-            <img src="${p.image_url}" style="width:60px; height:50px; object-fit:cover; border-radius:8px; background:#0f172a;" alt="${p.title}">
-          </td>
-          <td>
-            <strong style="color:#fff;">${p.title}</strong>
-            ${p.badge ? `<span style="font-size:11px; background:var(--primary); color:#fff; padding:2px 6px; border-radius:4px; margin-right:6px;">${p.badge}</span>` : ''}
-          </td>
-          <td><span style="color:var(--accent-gold); font-weight:700;">${p.category}</span></td>
-          <td>
-            <strong style="font-size:16px; color:#fff;">${p.price.toLocaleString('ar-EG')} ج.م</strong>
-            ${p.old_price > p.price ? `<div style="font-size:12px; color:#64748b; text-decoration:line-through;">${p.old_price.toLocaleString('ar-EG')} ج.م</div>` : ''}
-          </td>
-          <td style="font-size:13px; color:var(--text-muted); max-width:240px;">${p.description || '—'}</td>
-          <td>
-            <span style="color:${p.is_available ? 'var(--success)' : 'var(--danger)'}; font-weight:700;">
-              ${p.is_available ? 'معروض للعملاء ✓' : 'مخفي ✕'}
-            </span>
-          </td>
-          <td>
-            <div style="display:flex; gap:6px;">
-              <button class="btn-secondary" style="padding:4px 8px;" onclick="openEditProductModal(${p.id})">✏️</button>
-              <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteProduct(${p.id})">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = list.map(p => {
+        let imagesCount = 1;
+        try {
+          if (p.images_json) {
+            const arr = JSON.parse(p.images_json);
+            if (Array.isArray(arr) && arr.length > 0) imagesCount = arr.length;
+          }
+        } catch (e) {}
+
+        const stock = p.stock_quantity !== undefined ? p.stock_quantity : 1;
+        const stockHtml = stock > 0
+          ? `<span style="background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:6px; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+               <span>✓</span> متوفر: <strong>${stock}</strong> طقم
+             </span>`
+          : `<span style="background:rgba(239,68,68,0.15); color:var(--danger); border:1px solid rgba(239,68,68,0.3); padding:4px 10px; border-radius:6px; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+               <span>✕</span> نفذت الكمية (0)
+             </span>`;
+
+        return `
+          <tr>
+            <td>
+              <div style="position:relative; width:65px; height:55px; border-radius:8px; overflow:hidden; background:#0f172a; border:1px solid rgba(255,255,255,0.1);">
+                <img src="${p.image_url}" style="width:100%; height:100%; object-fit:cover;" alt="${p.title}">
+                <span style="position:absolute; bottom:2px; right:2px; background:rgba(0,0,0,0.85); color:#fff; font-size:10px; padding:1px 5px; border-radius:4px; font-weight:700;">📷 ${imagesCount}</span>
+              </div>
+            </td>
+            <td>
+              <strong style="color:#fff; font-size:14px;">${p.title}</strong>
+              ${p.badge ? `<span style="font-size:11px; background:var(--primary); color:#fff; padding:2px 6px; border-radius:4px; margin-right:6px;">${p.badge}</span>` : ''}
+            </td>
+            <td><span style="color:var(--accent-gold); font-weight:700;">${p.category}</span></td>
+            <td>
+              <strong style="font-size:15px; color:#fff;">${p.price.toLocaleString('ar-EG')} ج.م</strong>
+              ${p.old_price > p.price ? `<div style="font-size:12px; color:#64748b; text-decoration:line-through;">${p.old_price.toLocaleString('ar-EG')} ج.م</div>` : ''}
+            </td>
+            <td>${stockHtml}</td>
+            <td style="font-size:12px; color:var(--text-muted); max-width:200px; line-height:1.4;">${p.description || '—'}</td>
+            <td>
+              <span style="color:${p.is_available ? 'var(--success)' : 'var(--danger)'}; font-weight:700; font-size:13px;">
+                ${p.is_available ? 'معروض ✓' : 'مخفي ✕'}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-secondary" style="padding:6px 10px; font-size:13px;" title="تعديل تفاصيل الموديل والصور" onclick="openEditProductModal(${p.id})">✏️ تعديل</button>
+                <button class="btn-secondary" style="padding:6px 10px; font-size:13px; color:var(--danger); border-color:rgba(239,68,68,0.3);" title="حذف الموديل نهائياً" onclick="deleteProduct(${p.id})">🗑️ حذف</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderProductImagesGrid() {
+      const grid = document.getElementById('prodImagesGrid');
+      const countEl = document.getElementById('prodImagesCountText');
+      if (countEl) countEl.innerText = `${currentProductImages.length} صور`;
+
+      if (currentProductImages.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:12px; color:#64748b; font-size:12px;">لم يتم اختيار أي صورة بعد. يمكنك رفع صورة أو عدة صور للطقم.</div>`;
+        return;
+      }
+
+      grid.innerHTML = currentProductImages.map((item, idx) => {
+        const src = item.type === 'existing' ? item.url : item.base64;
+        const isCover = idx === 0;
+
+        return `
+          <div style="position:relative; width:100%; height:95px; border-radius:8px; overflow:hidden; border:2px solid ${isCover ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)'}; background:#0f172a;">
+            <img src="${src}" style="width:100%; height:100%; object-fit:cover;" alt="صورة ${idx + 1}">
+            ${isCover ? `<span style="position:absolute; top:3px; right:3px; background:var(--accent-gold); color:#000; font-size:9px; font-weight:900; padding:1px 5px; border-radius:4px;">★ الغلاف</span>` : `
+              <button type="button" onclick="makeCoverImage(${idx})" title="تعيين كغلاف رئيسي" style="position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.7); color:#fff; border:none; border-radius:4px; font-size:10px; padding:2px 5px; cursor:pointer;">
+                ★ رئيسية
+              </button>
+            `}
+            <button type="button" onclick="removeProductImage(${idx})" title="حذف هذه الصورة" style="position:absolute; top:3px; left:3px; background:rgba(239,68,68,0.85); color:#fff; border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; cursor:pointer; font-weight:bold;">
+              ✕
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function makeCoverImage(index) {
+      if (index <= 0 || index >= currentProductImages.length) return;
+      const [item] = currentProductImages.splice(index, 1);
+      currentProductImages.unshift(item);
+      renderProductImagesGrid();
+    }
+
+    function removeProductImage(index) {
+      currentProductImages.splice(index, 1);
+      renderProductImagesGrid();
+    }
+
+    function handleMultipleImagesPicked(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      let loadedCount = 0;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          currentProductImages.push({ type: 'new', base64: reader.result });
+          loadedCount++;
+          if (loadedCount === files.length) {
+            renderProductImagesGrid();
+            e.target.value = '';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     function filterProducts() {
@@ -1812,14 +1919,17 @@
 
     function openAddProductModal() {
       document.getElementById('productEditId').value = '';
-      document.getElementById('productModalTitle').innerText = 'إضافة موديل أثاث جديد';
+      document.getElementById('productModalTitle').innerText = 'إضافة موديل أثاث جديد للمعرض';
       document.getElementById('prodFormTitle').value = '';
+      document.getElementById('prodFormCat').value = 'ركنات مودرن';
       document.getElementById('prodFormPrice').value = '';
       document.getElementById('prodFormOldPrice').value = '';
+      document.getElementById('prodFormStock').value = '1';
+      document.getElementById('prodFormAvailable').value = '1';
       document.getElementById('prodFormDesc').value = '';
       document.getElementById('prodFormBadge').value = '';
-      document.getElementById('prodImgPreview').style.display = 'none';
-      pendingImageBase64 = null;
+      currentProductImages = [];
+      renderProductImagesGrid();
       document.getElementById('productModal').style.display = 'flex';
     }
 
@@ -1827,37 +1937,38 @@
       const p = productsData.find(x => x.id === id);
       if (!p) return;
       document.getElementById('productEditId').value = p.id;
-      document.getElementById('productModalTitle').innerText = 'تعديل موديل الأثاث والسعر';
+      document.getElementById('productModalTitle').innerText = 'تعديل تفاصيل الموديل والصور والكمية';
       document.getElementById('prodFormTitle').value = p.title;
       document.getElementById('prodFormCat').value = p.category;
       document.getElementById('prodFormPrice').value = p.price;
       document.getElementById('prodFormOldPrice').value = p.old_price || '';
+      document.getElementById('prodFormStock').value = p.stock_quantity !== undefined ? p.stock_quantity : 1;
+      document.getElementById('prodFormAvailable').value = p.is_available ? '1' : '0';
       document.getElementById('prodFormDesc').value = p.description || '';
       document.getElementById('prodFormBadge').value = p.badge || '';
 
-      const prev = document.getElementById('prodImgPreview');
-      prev.src = p.image_url;
-      prev.style.display = 'block';
-      pendingImageBase64 = null;
+      // جلب صور الموديل السابقة
+      currentProductImages = [];
+      let loadedImgs = [];
+      try {
+        if (p.images_json) {
+          loadedImgs = JSON.parse(p.images_json);
+        }
+      } catch (e) {}
+
+      if (!Array.isArray(loadedImgs) || loadedImgs.length === 0) {
+        if (p.image_url) loadedImgs = [p.image_url];
+      }
+
+      currentProductImages = loadedImgs.map(url => ({ type: 'existing', url }));
+      renderProductImagesGrid();
 
       document.getElementById('productModal').style.display = 'flex';
     }
 
     function closeProductModal() {
       document.getElementById('productModal').style.display = 'none';
-    }
-
-    function handleImagePicked(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        pendingImageBase64 = reader.result;
-        const prev = document.getElementById('prodImgPreview');
-        prev.src = reader.result;
-        prev.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+      currentProductImages = [];
     }
 
     async function saveProductForm(e) {
@@ -1867,17 +1978,25 @@
       const category = document.getElementById('prodFormCat').value;
       const price = parseFloat(document.getElementById('prodFormPrice').value);
       const old_price = parseFloat(document.getElementById('prodFormOldPrice').value) || 0;
+      const stock_quantity = parseInt(document.getElementById('prodFormStock').value, 10) || 0;
+      const is_available = parseInt(document.getElementById('prodFormAvailable').value, 10);
       const description = document.getElementById('prodFormDesc').value.trim();
       const badge = document.getElementById('prodFormBadge').value.trim();
+
+      const existing_images = currentProductImages.filter(x => x.type === 'existing').map(x => x.url);
+      const images_base64 = currentProductImages.filter(x => x.type === 'new').map(x => x.base64);
 
       const payload = {
         title,
         category,
         price,
         old_price,
+        stock_quantity,
+        is_available,
         description,
         badge,
-        image_base64: pendingImageBase64
+        existing_images,
+        images_base64
       };
 
       const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
@@ -1894,21 +2013,25 @@
 
         closeProductModal();
         await refreshDashboard();
-        alert('تم حفظ الموديل وتحديث الكتالوج بنجاح ✓');
+        alert('تم حفظ الموديل وتحديث المعرض والكتالوج بنجاح ✓');
       } catch (err) {
         alert(err.message);
       }
     }
 
     async function deleteProduct(id) {
-      if (!confirm('هل تريد حذف هذا الموديل من المعرض نهائياً؟')) return;
+      const p = productsData.find(x => x.id === id);
+      const name = p ? p.title : 'هذا الموديل';
+      if (!confirm(`هل أنت متأكد من حذف موديل "${name}" نهائياً من المعرض؟`)) return;
       try {
         const res = await fetch(`/api/admin/products/${id}`, {
           method: 'DELETE',
           headers: getAdminHeaders()
         });
-        if (!res.ok) throw new Error('فشل الحذف');
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'فشل الحذف');
         await refreshDashboard();
+        alert('تم حذف الموديل من المعرض بنجاح ✓');
       } catch (err) {
         alert(err.message);
       }

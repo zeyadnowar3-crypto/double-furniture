@@ -53,6 +53,7 @@ function initSchema() {
       description TEXT,
       image_url TEXT NOT NULL,
       images_json TEXT DEFAULT '[]',
+      stock_quantity INTEGER NOT NULL DEFAULT 1,
       is_available INTEGER NOT NULL DEFAULT 1,
       badge TEXT,
       created_at TEXT NOT NULL
@@ -94,6 +95,19 @@ function initSchema() {
       created_at TEXT NOT NULL
     );
   `);
+
+  // ترقية الجدول تلقائياً إذا كانت الأعمدة الجديدة غير موجودة
+  try {
+    const productCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
+    if (!productCols.includes('stock_quantity')) {
+      db.exec("ALTER TABLE products ADD COLUMN stock_quantity INTEGER NOT NULL DEFAULT 1");
+    }
+    if (!productCols.includes('images_json')) {
+      db.exec("ALTER TABLE products ADD COLUMN images_json TEXT DEFAULT '[]'");
+    }
+  } catch (e) {
+    console.error('[DB Migration Error]:', e.message);
+  }
 
   // إعدادات افتراضية
   const setSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');

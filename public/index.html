@@ -1077,6 +1077,63 @@
     </div>
   </div>
 
+  <!-- ================= 3.5. نافذة تفاصيل وصور الطقم الكاملة ================= -->
+  <div class="modal-overlay" id="productDetailModal" style="display: none; align-items: center; justify-content: center; z-index: 9999; padding: 15px;" onclick="closeProductDetailModal()">
+    <div class="modal-box" style="max-width: 760px; width: 100%; max-height: 92vh; overflow-y: auto; text-align: right; padding: 22px; position: relative; border-radius: 20px; border: 1px solid rgba(251, 191, 36, 0.3); background: #0f172a;" onclick="event.stopPropagation()">
+      <button onclick="closeProductDetailModal()" style="position: absolute; top: 14px; left: 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">✕</button>
+
+      <!-- معرض الصور التفاعلي للطقم -->
+      <div style="margin-bottom: 18px;">
+        <div style="position: relative; width: 100%; height: 320px; border-radius: 16px; overflow: hidden; background: #070a12; border: 1px solid rgba(255,255,255,0.1); cursor: zoom-in;" onclick="openLightboxFromDetail()">
+          <img id="detailActiveImg" src="" style="width: 100%; height: 100%; object-fit: contain;" alt="صورة الموديل">
+          <span style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 700; backdrop-filter: blur(4px);">🔍 اضغط لتكبير الصورة</span>
+          <div id="detailBadgeContainer" style="position: absolute; top: 12px; right: 12px;"></div>
+        </div>
+
+        <!-- شريط مصغرات جميع صور الطقم -->
+        <div id="detailThumbsStrip" style="display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin;"></div>
+      </div>
+
+      <!-- تفاصيل الموديل والمواصفات والكمية -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <span id="detailCat" style="background: rgba(217, 119, 6, 0.15); color: var(--accent-gold); font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 6px;"></span>
+          <span id="detailStockBadge"></span>
+        </div>
+
+        <h2 id="detailTitle" style="font-size: 21px; color: #fff; margin-bottom: 8px; font-weight: 800; line-height: 1.3;"></h2>
+
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;">
+          <span style="font-size: 26px; font-weight: 900; color: #fff;" id="detailPrice"></span>
+          <span style="font-size: 15px; color: var(--accent-gold); font-weight: 700;">ج.م</span>
+          <span id="detailOldPrice" style="font-size: 15px; color: #64748b; text-decoration: line-through;"></span>
+        </div>
+
+        <div style="background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+          <div style="font-size: 13px; font-weight: 800; color: var(--accent-gold); margin-bottom: 6px;">📐 مواصفات وخامات ومقاسات الطقم:</div>
+          <div id="detailDesc" style="color: #cbd5e1; font-size: 14px; line-height: 1.6; white-space: pre-line;"></div>
+        </div>
+
+        <!-- الإضافة للطلبية والتواصل -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <div class="qty-control" style="background: #090d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px;">
+            <button class="qty-btn" onclick="changeDetailQty(-1)" style="font-size: 18px; width: 36px; height: 36px;">−</button>
+            <span class="qty-val" id="detailQtyVal" style="font-size: 16px; font-weight: 800; min-width: 32px;">1</span>
+            <button class="qty-btn" onclick="changeDetailQty(1)" style="font-size: 18px; width: 36px; height: 36px;">+</button>
+          </div>
+
+          <button id="detailAddCartBtn" class="btn-primary-action" style="flex: 1; padding: 12px 18px; font-size: 15px; border-radius: 10px; justify-content: center;" onclick="addDetailToCart()">
+            <span>إضافة للطلبية 🛒</span>
+          </button>
+
+          <a id="detailWaBtn" href="#" target="_blank" class="btn-secondary" style="padding: 12px 14px; font-size: 13px; border-radius: 10px; border-color: rgba(37,211,102,0.4); color: #25d366; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <span>💬 استفسار واتساب</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= 4. تكبير الصورة (Lightbox) ================= -->
   <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1455,23 +1512,46 @@
           : '';
         const badgeHtml = prod.badge ? `<span class="badge-tag">${prod.badge}</span>` : '';
 
+        // كشف عدد صور الطقم
+        let imagesCount = 1;
+        try {
+          if (prod.images_json) {
+            const arr = JSON.parse(prod.images_json);
+            if (Array.isArray(arr) && arr.length > 0) imagesCount = arr.length;
+          }
+        } catch (e) {}
+
+        const stock = prod.stock_quantity !== undefined ? prod.stock_quantity : 1;
+        const stockHtml = stock > 0
+          ? `<span style="font-size: 11px; color: var(--success); font-weight: 800; background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.25);">✓ متوفر: ${stock} أطقم</span>`
+          : `<span style="font-size: 11px; color: var(--danger); font-weight: 800; background: rgba(239,68,68,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.25);">⚠️ نفذت الكمية</span>`;
+
         return `
           <div class="product-card">
-            <div class="product-img-wrap" onclick="openLightbox('${prod.image_url}', '${prod.title.replace(/'/g, "\\'")}')">
+            <div class="product-img-wrap" onclick="openProductDetail(${prod.id})">
               ${badgeHtml}
               <img class="product-img" src="${prod.image_url}" alt="${prod.title}" loading="lazy">
-              <span class="zoom-hint">🔍 تكبير الصورة</span>
+              ${imagesCount > 1 ? `<span style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); color: var(--accent-gold); font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(251,191,36,0.3); z-index: 2;">📸 ${imagesCount} صور للطقم</span>` : ''}
+              <span class="zoom-hint">🔍 اضغط لرؤية الصور والتفاصيل</span>
             </div>
             <div class="product-body">
-              <span class="product-cat">${prod.category}</span>
-              <h3 class="product-title">${prod.title}</h3>
-              <p class="product-desc">${prod.description || 'أثاث فاخر عالي الجودة'}</p>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span class="product-cat">${prod.category}</span>
+                ${stockHtml}
+              </div>
+              <h3 class="product-title" style="cursor: pointer;" onclick="openProductDetail(${prod.id})">${prod.title}</h3>
+              <p class="product-desc" style="cursor: pointer;" onclick="openProductDetail(${prod.id})">${prod.description || 'أثاث فاخر عالي الجودة'}</p>
 
               <div class="product-price-row">
                 <span class="product-price">${prod.price.toLocaleString('ar-EG')}</span>
                 <span class="price-currency">ج.م</span>
                 ${oldPriceHtml}
               </div>
+
+              <!-- زر فتح تفاصيل وصور الطقم -->
+              <button class="btn-secondary" onclick="openProductDetail(${prod.id})" style="width: 100%; margin-bottom: 10px; padding: 8px 12px; font-size: 13px; border-radius: 10px; border-color: rgba(251,191,36,0.3); color: var(--accent-gold); justify-content: center; font-weight: 700;">
+                <span>📸 عرض صور وتفاصيل الطقم (${imagesCount})</span>
+              </button>
 
               <div class="add-to-order-row">
                 <div class="qty-control">
@@ -1657,6 +1737,155 @@
 
     function closeSuccessModal() {
       document.getElementById('orderSuccessModal').style.display = 'none';
+    }
+
+    // ================= نافذة تفاصيل وصور الطقم الكاملة =================
+    let activeDetailProduct = null;
+    let activeDetailImages = [];
+    let activeDetailImgIndex = 0;
+
+    function openProductDetail(productId) {
+      const prod = allProducts.find(p => p.id === productId);
+      if (!prod) return;
+
+      activeDetailProduct = prod;
+
+      // استخراج كافة صور الطقم
+      activeDetailImages = [];
+      try {
+        if (prod.images_json) {
+          const arr = JSON.parse(prod.images_json);
+          if (Array.isArray(arr) && arr.length > 0) activeDetailImages = arr;
+        }
+      } catch (e) {}
+
+      if (activeDetailImages.length === 0) {
+        activeDetailImages = [prod.image_url];
+      }
+
+      activeDetailImgIndex = 0;
+
+      // ضبط الصورة النشطة وشريط المصغرات
+      updateDetailActiveImage();
+      renderDetailThumbs();
+
+      // البيانات النصية
+      document.getElementById('detailTitle').innerText = prod.title;
+      document.getElementById('detailCat').innerText = prod.category;
+      document.getElementById('detailPrice').innerText = prod.price.toLocaleString('ar-EG');
+      
+      const oldPriceEl = document.getElementById('detailOldPrice');
+      if (prod.old_price > prod.price) {
+        oldPriceEl.innerText = `${prod.old_price.toLocaleString('ar-EG')} ج.م`;
+        oldPriceEl.style.display = 'inline';
+      } else {
+        oldPriceEl.style.display = 'none';
+      }
+
+      // شارة الموديل
+      const badgeContainer = document.getElementById('detailBadgeContainer');
+      if (prod.badge) {
+        badgeContainer.innerHTML = `<span class="badge-tag" style="position:static;">${prod.badge}</span>`;
+      } else {
+        badgeContainer.innerHTML = '';
+      }
+
+      // الكمية المتوفرة
+      const stock = prod.stock_quantity !== undefined ? prod.stock_quantity : 1;
+      const stockBadgeEl = document.getElementById('detailStockBadge');
+      if (stock > 0) {
+        stockBadgeEl.innerHTML = `<span style="color:var(--success); font-weight:800; background:rgba(16,185,129,0.12); padding:3px 10px; border-radius:6px; border:1px solid rgba(16,185,129,0.3);">✓ متوفر بالمخزن (${stock} أطقم)</span>`;
+      } else {
+        stockBadgeEl.innerHTML = `<span style="color:var(--danger); font-weight:800; background:rgba(239,68,68,0.12); padding:3px 10px; border-radius:6px; border:1px solid rgba(239,68,68,0.3);">⚠️ نفذت الكمية حالياً</span>`;
+      }
+
+      // الوصف والمقاسات
+      document.getElementById('detailDesc').innerText = prod.description || 'أثاث راقي وموديل حصري مصنوع بأعلى معايير الجودة.';
+
+      // كمية الإضافة
+      const currentCartQty = cart[prod.id] ? cart[prod.id].quantity : 1;
+      document.getElementById('detailQtyVal').innerText = currentCartQty;
+
+      // زر الواتساب للاستفسار المباشر عن هذا الموديل
+      const waText = `مرحباً، أستفسر بخصوص هذا الموديل المعروض: ${prod.title} (كود #${prod.id}) بسعر ${prod.price.toLocaleString('ar-EG')} ج.م.`;
+      document.getElementById('detailWaBtn').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+      // فتح النافذة
+      document.getElementById('productDetailModal').style.display = 'flex';
+    }
+
+    function closeProductDetailModal() {
+      document.getElementById('productDetailModal').style.display = 'none';
+      activeDetailProduct = null;
+    }
+
+    function updateDetailActiveImage() {
+      if (activeDetailImages.length > 0) {
+        document.getElementById('detailActiveImg').src = activeDetailImages[activeDetailImgIndex];
+      }
+    }
+
+    function renderDetailThumbs() {
+      const container = document.getElementById('detailThumbsStrip');
+      if (activeDetailImages.length <= 1) {
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = 'flex';
+
+      container.innerHTML = activeDetailImages.map((imgUrl, idx) => {
+        const isActive = idx === activeDetailImgIndex;
+        return `
+          <div onclick="selectDetailImg(${idx})" style="flex-shrink: 0; width: 68px; height: 54px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid ${isActive ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)'}; background: #0b0f19; transition: transform 0.2s;">
+            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="صورة ${idx + 1}">
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectDetailImg(idx) {
+      activeDetailImgIndex = idx;
+      updateDetailActiveImage();
+      renderDetailThumbs();
+    }
+
+    function openLightboxFromDetail() {
+      if (activeDetailProduct && activeDetailImages.length > 0) {
+        openLightbox(activeDetailImages[activeDetailImgIndex], `${activeDetailProduct.title} (صورة ${activeDetailImgIndex + 1} من ${activeDetailImages.length})`);
+      }
+    }
+
+    function changeDetailQty(delta) {
+      const valEl = document.getElementById('detailQtyVal');
+      let current = parseInt(valEl.innerText, 10) || 1;
+      current = Math.max(1, current + delta);
+      valEl.innerText = current;
+    }
+
+    function addDetailToCart() {
+      if (!activeDetailProduct) return;
+      const qty = parseInt(document.getElementById('detailQtyVal').innerText, 10) || 1;
+
+      cart[activeDetailProduct.id] = {
+        product: activeDetailProduct,
+        quantity: qty,
+        notes: ''
+      };
+
+      const cardQty = document.getElementById(`cardQty-${activeDetailProduct.id}`);
+      if (cardQty) cardQty.innerText = qty;
+
+      updateCartUI();
+
+      const btn = document.getElementById('detailAddCartBtn');
+      if (btn) {
+        btn.innerHTML = '<span>تمت الإضافة للطلبية بنجاح ✓</span>';
+        btn.style.background = 'var(--success)';
+        setTimeout(() => {
+          btn.innerHTML = '<span>إضافة للطلبية 🛒</span>';
+          btn.style.background = '';
+        }, 1500);
+      }
     }
 
     // Lightbox تكبير الصور

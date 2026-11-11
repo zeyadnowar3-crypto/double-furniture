@@ -730,19 +730,41 @@ app.get('/api/admin/products', requireAdminAuth, (req, res) => {
 app.post('/api/admin/products', requireAdminAuth, (req, res) => {
   try {
     const body = req.body || {};
-    const { title, category, price, old_price, description, badge, image_base64, image_url } = body;
+    const { title, category, price, old_price, description, badge, stock_quantity, image_base64, images_base64, image_url } = body;
     if (!title || !title.trim()) return res.status(400).json({ error: 'اسم الموديل مطلوب' });
     if (price === undefined || isNaN(price)) return res.status(400).json({ error: 'السعر مطلوب' });
 
-    let finalImageUrl = image_url || '/images/placeholder-rokna.svg';
-    if (image_base64) {
-      const savedPath = saveBase64Image(image_base64);
-      if (savedPath) finalImageUrl = savedPath;
+    // تجميع وحفظ جميع صور الموديل (صورة واحدة أو صور متعددة)
+    const allImages = [];
+    if (image_url && typeof image_url === 'string') {
+      allImages.push(image_url);
     }
 
+    if (image_base64 && typeof image_base64 === 'string') {
+      const saved = saveBase64Image(image_base64);
+      if (saved) allImages.push(saved);
+    }
+
+    if (Array.isArray(images_base64)) {
+      for (const b64 of images_base64) {
+        if (b64 && typeof b64 === 'string') {
+          const saved = saveBase64Image(b64);
+          if (saved) allImages.push(saved);
+        }
+      }
+    }
+
+    if (allImages.length === 0) {
+      allImages.push('/images/placeholder-rokna.svg');
+    }
+
+    const finalImageUrl = allImages[0];
+    const finalImagesJson = JSON.stringify(allImages);
+    const parsedStock = (stock_quantity !== undefined && !isNaN(stock_quantity)) ? Math.max(0, parseInt(stock_quantity, 10)) : 1;
+
     const result = db.prepare(`
-      INSERT INTO products (title, category, price, old_price, description, image_url, badge, is_available, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1, datetime('now', 'localtime'))
+      INSERT INTO products (title, category, price, old_price, description, image_url, images_json, stock_quantity, badge, is_available, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now', 'localtime'))
     `).run(
       title.trim(),
       category || 'عام',
@@ -750,6 +772,8 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
       old_price ? parseFloat(old_price) : 0,
       description || '',
       finalImageUrl,
+      finalImagesJson,
+      parsedStock,
       badge || ''
     );
 
@@ -766,15 +790,51 @@ app.post('/api/admin/products', requireAdminAuth, (req, res) => {
 app.put('/api/admin/products/:id', requireAdminAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { title, category, price, old_price, description, badge, is_available, image_base64, image_url } = req.body;
+    const { title, category, price, old_price, description, badge, is_available, stock_quantity, image_base64, images_base64, existing_images, image_url } = req.body;
 
-    const currentProd = db.prepare('SELECT title, price FROM products WHERE id = ?').get(id);
+    const currentProd = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    if (!currentProd) return res.status(404).json({ error: 'الموديل غير موجود' });
 
-    let finalImageUrl = image_url;
-    if (image_base64) {
-      const savedPath = saveBase64Image(image_base64);
-      if (savedPath) finalImageUrl = savedPath;
+    // إدارة الصور المحدثة
+    let finalImageUrl = currentProd.image_url;
+    let finalImagesJson = currentProd.images_json || '[]';
+
+    // إذا أرسل العميل قائمة بالصور المحتفظ بها أو صور جديدة
+    if (existing_images !== undefined || images_base64 !== undefined || image_base64 || image_url) {
+      const imagesList = [];
+
+      // 1. إضافة الصور القديمة المعتمدة
+      if (Array.isArray(existing_images)) {
+        for (const img of existing_images) {
+          if (typeof img === 'string' && img.trim()) imagesList.push(img.trim());
+        }
+      } else if (image_url) {
+        imagesList.push(image_url);
+      }
+
+      // 2. حفظ وإضافة الصور الجديدة
+      if (image_base64) {
+        const saved = saveBase64Image(image_base64);
+        if (saved) imagesList.push(saved);
+      }
+      if (Array.isArray(images_base64)) {
+        for (const b64 of images_base64) {
+          if (b64 && typeof b64 === 'string') {
+            const saved = saveBase64Image(b64);
+            if (saved) imagesList.push(saved);
+          }
+        }
+      }
+
+      if (imagesList.length > 0) {
+        finalImageUrl = imagesList[0];
+        finalImagesJson = JSON.stringify(imagesList);
+      }
     }
+
+    const parsedStock = (stock_quantity !== undefined && stock_quantity !== null && !isNaN(stock_quantity)) 
+      ? Math.max(0, parseInt(stock_quantity, 10)) 
+      : currentProd.stock_quantity;
 
     db.prepare(`
       UPDATE products
@@ -785,7 +845,9 @@ app.put('/api/admin/products/:id', requireAdminAuth, (req, res) => {
           description = COALESCE(?, description),
           badge = COALESCE(?, badge),
           is_available = COALESCE(?, is_available),
-          image_url = COALESCE(?, image_url)
+          stock_quantity = COALESCE(?, stock_quantity),
+          image_url = COALESCE(?, image_url),
+          images_json = COALESCE(?, images_json)
       WHERE id = ?
     `).run(
       title ? title.trim() : null,
@@ -795,12 +857,14 @@ app.put('/api/admin/products/:id', requireAdminAuth, (req, res) => {
       description !== undefined ? description : null,
       badge !== undefined ? badge : null,
       is_available !== undefined ? (is_available ? 1 : 0) : null,
-      finalImageUrl || null,
+      parsedStock,
+      finalImageUrl,
+      finalImagesJson,
       id
     );
 
     // إذا تم تعديل السعر، إرسال إشعار فوري لجميع العملاء
-    if (currentProd && price !== undefined && parseFloat(price) !== currentProd.price) {
+    if (price !== undefined && parseFloat(price) !== currentProd.price) {
       const newP = parseFloat(price);
       addNotification(
         'client',
