@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: double-furniture-showroom
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production

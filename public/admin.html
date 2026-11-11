@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>لوحة التحكم — إدارة معرض DOUBLE FURNITURE</title>
+  
+  <!-- إعدادات سفاري والموبايل للوحة الإدارة -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="إدارة المعرض">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/logo-256.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <link rel="manifest" href="/manifest-admin.json">
+  <meta name="theme-color" content="#0f172a">
+  <script src="/js/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --sidebar-bg: #111827;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #d97706;
+      --primary-hover: #b45309;
+      --accent-gold: #fbbf24;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --info: #38bdf8;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ================= شاشة قفل لوحة التحكم ================= */
+    #adminLockScreen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #1e293b 0%, #0b0f19 100%);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lock-box {
+      background: #151c2e;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .lock-icon {
+      font-size: 50px;
+      margin-bottom: 14px;
+    }
+
+    .lock-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .lock-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .pin-input {
+      width: 100%;
+      background: #0b0f19;
+      border: 2px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 20px;
+      color: #fff;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn-unlock {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), #b45309);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+    }
+
+    /* ================= الواجهة الرئيسية للوحة التحكم ================= */
+    .app-layout {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* الشريط الجانبي */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      border-left: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title-admin {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .brand-sub-admin {
+      font-size: 11px;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+    }
+
+    .nav-badge {
+      margin-right: auto;
+      background: var(--danger);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .btn-catalog-preview {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      margin-bottom: 8px;
+    }
+
+    .btn-catalog-preview:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* منطقة المحتوى */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .top-header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .content-body {
+      padding: 28px;
+      max-width: 1300px;
+      width: 100%;
+    }
+
+    /* كروت الإحصائيات */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* شريط الأكشن والبحث في الأقسام */
+    .section-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary-action {
+      background: linear-gradient(135deg, var(--primary), #b45309);
+      color: #fff;
+      border: none;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-primary-action:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    /* الجداول */
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 700;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 14px 18px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* أكواد العملاء وبطاقاتها */
+    .passcode-pill {
+      font-family: monospace;
+      font-size: 15px;
+      font-weight: 800;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: var(--accent-gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px;
+      transition: color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: #fff;
+    }
+
+    /* سويتش التفعيل / الإيقاف */
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .switch-box {
+      width: 44px;
+      height: 24px;
+      background: #475569;
+      border-radius: 12px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .switch-box::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+
+    .switch-active .switch-box {
+      background: var(--success);
+    }
+
+    .switch-active .switch-box::after {
+      transform: translateX(20px);
+    }
+
+    /* النوافذ المنبثقة (Modals) */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-card {
+      background: var(--sidebar-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      padding: 28px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: #0b0f19;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .img-upload-dropzone {
+      border: 2px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.2);
+      transition: border-color 0.2s;
+    }
+
+    .img-upload-dropzone:hover {
+      border-color: var(--primary);
+    }
+
+    .preview-thumb {
+      max-height: 140px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* تصنيفات الطلبات */
+    .status-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    .status-new { background: rgba(56, 189, 248, 0.2); color: var(--info); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .status-progress { background: rgba(217, 119, 6, 0.2); color: var(--accent-gold); border: 1px solid rgba(217, 119, 6, 0.3); }
+    .status-ready { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-cancelled { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* تفاصيل الطلب */
+    .order-items-table {
+      width: 100%;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    /* تحسينات كاملة لواجهة الموبايل وسفاري */
+    @media (max-width: 768px) {
+      .app-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-left: none;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .sidebar-brand {
+        padding: 12px 16px;
+      }
+      .nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px 12px;
+        gap: 8px;
+        scrollbar-width: none;
+      }
+      .nav-list::-webkit-scrollbar {
+        display: none;
+      }
+      .nav-item {
+        white-space: nowrap;
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+      .sidebar-footer {
+        display: none;
+      }
+      .content-body {
+        padding: 14px;
+      }
+      .top-header {
+        padding: 12px 16px;
+      }
+      .page-title {
+        font-size: 17px;
+      }
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat-card {
+        padding: 12px;
+      }
+      .stat-val {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= 1. شاشة قفل لوحة التحكم (Admin Login) ================= -->
+  <div id="adminLockScreen">
+    <div class="lock-box">
+      <div class="lock-icon">🔒</div>
+      <h2 class="lock-title">لوحة تحكم معرض الأثاث</h2>
+      <p class="lock-desc">سجل دخولك بحساب المدير للاطلاع والتحكم بالمعرض والعملاء والطلبيات</p>
+
+      <form onsubmit="handleAdminLogin(event)">
+        <div style="margin-bottom: 12px; text-align: right;">
+          <label style="font-size: 13px; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">اسم المستخدم (اختياري):</label>
+          <input type="text" id="adminUserInput" class="form-input" placeholder="اسم المستخدم أو اتركه فارغاً" style="font-size: 14px; font-weight: 700; text-align: center;">
+        </div>
+
+        <div style="margin-bottom: 18px; text-align: right;">
+          <label style="font-size: 13px; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">كلمة المرور / الباسوورد:</label>
+          <div style="position: relative;">
+            <input type="password" id="adminPinInput" class="form-input" placeholder="أدخل كلمة المرور هنا" style="font-size: 16px; font-weight: 700; text-align: center; padding-left: 44px;" autofocus required>
+            <button type="button" onclick="toggleAdminPassVisibility()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);" title="إظهار/إخفاء كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-unlock" id="btnUnlock">دخول لوحة التحكم ➔</button>
+      </form>
+      <div id="pinError" style="color: var(--danger); font-size: 13px; margin-top: 12px; display: none;"></div>
+    </div>
+  </div>
+
+  <!-- ================= 2. الواجهة الرئيسية للوحة التحكم ================= -->
+  <div class="app-layout" id="appLayout">
+    <!-- الشريط الجانبي -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span style="font-size: 30px;">🛋️</span>
+        <div>
+          <div class="brand-title-admin" id="sideShowroomName">معرض DOUBLE FURNITURE</div>
+          <div class="brand-sub-admin">لوحة إدارة المعرض والعملاء</div>
+        </div>
+      </div>
+
+      <ul class="nav-list">
+        <li class="nav-item active" onclick="switchTab('clients')">
+          <span>👥</span>
+          <span>إدارة العملاء وكلمات المرور</span>
+          <span class="nav-badge" id="badgeClientsCount">0</span>
+        </li>
+        <li class="nav-item" onclick="switchTab('products')">
+          <span>🛋️</span>
+          <span>الموديلات والأسعار</span>
+          <span class="nav-badge" style="background: #334155;" id="badgeProductsCount">0</span>
+        </li>
+        <li class="nav-item" onclick="switchTab('orders')">
+          <span>📦</span>
+          <span>الطلبيات المستلمة</span>
+          <span class="nav-badge" id="badgeOrdersCount">0</span>
+        </li>
+        <li class="nav-item" onclick="switchTab('staff')">
+          <span>👔</span>
+          <span>المديرين والباسووردات</span>
+          <span class="nav-badge" style="background: #475569;" id="badgeStaffCount">1</span>
+        </li>
+        <li class="nav-item" onclick="switchTab('settings')">
+          <span>⚙️</span>
+          <span>إعدادات المعرض</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div style="font-size: 12px; color: var(--accent-gold); padding: 8px 10px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 8px; text-align: center;">
+          <span>👤 مسجل كـ: </span>
+          <strong id="activeAdminDisplay">المدير العام</strong>
+        </div>
+        <a class="btn-catalog-preview" href="/" target="_blank">
+          <span>🌐 فتح المعرض (كعميل)</span>
+        </a>
+        <button class="btn-secondary" style="width: 100%;" onclick="adminLogout()">
+          🔒 تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- منطقة المحتوى -->
+    <main class="main-content">
+      <header class="top-header">
+        <h1 class="page-title" id="pageTitleText">إدارة العملاء وأكواد الدخول</h1>
+        <div class="header-actions">
+          <button id="soundToggleBtn" onclick="toggleSoundPreference()" class="btn-secondary" style="padding: 9px 14px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" title="تشغيل / كتم صوت إشعارات الطلبيات">
+            <span id="soundIcon">🔔</span>
+            <span id="soundLabel">صوت الطلبيات: نشط</span>
+          </button>
+          <button class="btn-primary-action" id="headerActionBtn" onclick="openAddModal()">
+            <span>➕ إضافة عميل جديد</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-body">
+        <!-- كروت الإحصائيات -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon-wrap">👥</div>
+            <div>
+              <div class="stat-val" id="statClients">0</div>
+              <div class="stat-label">إجمالي العملاء المصرح لهم</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap" style="color: var(--accent-gold); background: rgba(251, 191, 36, 0.15);">🛋️</div>
+            <div>
+              <div class="stat-val" id="statProducts">0</div>
+              <div class="stat-label">الموديلات المعروضة بالكتالوج</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap" style="color: var(--info); background: rgba(56, 189, 248, 0.15);">📦</div>
+            <div>
+              <div class="stat-val" id="statOrders">0</div>
+              <div class="stat-label">إجمالي الطلبيات المستلمة</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap" style="color: var(--success); background: rgba(16, 185, 129, 0.15);">💰</div>
+            <div>
+              <div class="stat-val" id="statSales">0 ج.م</div>
+              <div class="stat-label">قيمة المبيعات المحجوزة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= تبويب 1: إدارة العملاء ================= -->
+        <div id="tabClients" class="tab-pane">
+          <div class="section-toolbar">
+            <input type="text" id="clientSearchInput" class="form-input" style="max-width: 350px;" placeholder="🔍 بحث عن عميل أو كود..." oninput="filterClients()">
+            <div style="font-size: 13px; color: var(--text-muted);">
+              💡 يمكنك توليد كود دخول أو تحديد كلمة سر مخصصة لكل عميل، وإيقاف دخوله في أي لحظة.
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم العميل / المعرض</th>
+                  <th>الهاتف</th>
+                  <th>كود الدخول / الباسوورد</th>
+                  <th>رابط مباشر للعميل</th>
+                  <th>صلاحية الدخول</th>
+                  <th>الطلبات</th>
+                  <th>آخر دخول</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTableBody">
+                <!-- يتم الملء ديناميكياً -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= تبويب 2: إدارة الموديلات والأسعار ================= -->
+        <div id="tabProducts" class="tab-pane" style="display: none;">
+          <div class="section-toolbar">
+            <input type="text" id="productSearchInput" class="form-input" style="max-width: 350px;" placeholder="🔍 بحث في الموديلات..." oninput="filterProducts()">
+            <button class="btn-primary-action" onclick="openAddProductModal()">
+              <span>➕ إضافة موديل أثاث جديد</span>
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 80px;">الصورة</th>
+                  <th>اسم الموديل</th>
+                  <th>القسم</th>
+                  <th>السعر للعميل</th>
+                  <th>الوصف والمقاسات</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody">
+                <!-- يتم الملء ديناميكياً -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= تبويب 3: الطلبيات المستلمة ================= -->
+        <div id="tabOrders" class="tab-pane" style="display: none;">
+          <div class="section-toolbar">
+            <div style="font-weight: 700; color: #fff;">سجل جميع الطلبيات التي قام العملاء بإرسالها:</div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلبية</th>
+                  <th>العميل</th>
+                  <th>تاريخ الطلب</th>
+                  <th>القطع والكميات</th>
+                  <th>الإجمالي</th>
+                  <th>ملاحظات العميل</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <!-- يتم الملء ديناميكياً -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= تبويب: فريق الإدارة والمديرين ================= -->
+        <div id="tabStaff" class="tab-pane" style="display: none;">
+          <!-- بطاقتان بارزتان: رابط الأدمن ورابط العميل للنسخ والتحميل -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <!-- 1) بطاقة رابط الأدمن -->
+            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), #0f172a); border: 2px solid var(--primary); border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 26px;">👔</span>
+                  <div>
+                    <h3 style="font-size: 16px; font-weight: 800; color: #fff;">رابط لوحة الأدمن (لموبايلي والمديرين)</h3>
+                    <div style="font-size: 12px; color: var(--accent-gold);">لتنزيل شاشة الإدارة والتحكم على الموبايل</div>
+                  </div>
+                </div>
+                <span style="background: rgba(217, 119, 6, 0.2); color: var(--accent-gold); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(217, 119, 6, 0.4);">خاص بالإدارة</span>
+              </div>
+
+              <div style="background: #0b0f19; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: #38bdf8; direction: ltr; text-align: left; word-break: break-all; margin-bottom: 12px;" id="boxAdminUrl">
+                جاري التحميل...
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-primary-action" style="flex: 1; justify-content: center; font-size: 13px; padding: 10px;" onclick="copyUnifiedUrl('admin')">
+                  📋 نسخ رابط الأدمن
+                </button>
+                <button class="btn-secondary" style="padding: 10px 14px; font-size: 13px; font-weight: 700;" onclick="showAdminQr()">
+                  📲 باركود QR
+                </button>
+              </div>
+            </div>
+
+            <!-- 2) بطاقة رابط العميل والعامل -->
+            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), #0f172a); border: 2px solid var(--success); border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 26px;">🛋️</span>
+                  <div>
+                    <h3 style="font-size: 16px; font-weight: 800; color: #fff;">رابط المعرض (للعميل والعامل)</h3>
+                    <div style="font-size: 12px; color: #4ade80;">لتنزيل الكتالوج والطلب على موبايل العميل</div>
+                  </div>
+                </div>
+                <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.4);">للعملاء والعمال</span>
+              </div>
+
+              <div style="background: #0b0f19; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: #4ade80; direction: ltr; text-align: left; word-break: break-all; margin-bottom: 12px;" id="boxCatalogUrl">
+                جاري التحميل...
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-primary-action" style="flex: 1; justify-content: center; font-size: 13px; padding: 10px; background: linear-gradient(135deg, #10b981, #059669);" onclick="copyUnifiedUrl('catalog')">
+                  📋 نسخ رابط العميل
+                </button>
+                <button class="btn-secondary" style="padding: 10px 14px; font-size: 13px; font-weight: 700;" onclick="showCatalogQr()">
+                  📲 باركود QR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-toolbar">
+            <input type="text" id="staffSearchInput" class="form-input" style="max-width: 350px;" placeholder="🔍 بحث في أسماء المديرين..." oninput="filterStaff()">
+            <button class="btn-primary-action" onclick="openAddStaffModal()">
+              <span>➕ إضافة مدير جديد وتحديد باسوورد له</span>
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم المدير</th>
+                  <th>اسم المستخدم (Login)</th>
+                  <th>كلمة المرور / الباسوورد</th>
+                  <th>الرتبة والصلاحية</th>
+                  <th>صلاحية الدخول</th>
+                  <th>تاريخ الإضافة</th>
+                  <th>آخر تسجيل دخول</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody">
+                <!-- يتم الملء ديناميكياً -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= تبويب 4: الإعدادات ================= -->
+        <div id="tabSettings" class="tab-pane" style="display: none;">
+          <div style="max-width: 600px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 28px;">
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px; color: #fff;">إعدادات المعرض وبيانات الاتصال</h3>
+
+            <form onsubmit="saveSettings(event)">
+              <div class="form-group">
+                <label class="form-label">اسم المعرض (يظهر للعميل في الكتالوج)</label>
+                <input type="text" id="settingShowroomName" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">رقم واتساب لاستلام الطلبات (بالكود الدولي مثلاً: 201012345678)</label>
+                <input type="text" id="settingWhatsapp" class="form-input" placeholder="2010xxxxxxxx" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">رسالة الترحيب أعلى المعرض</label>
+                <textarea id="settingWelcome" class="form-textarea" rows="2"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">كود الدخول للوحة التحكم (PIN السري للمدير)</label>
+                <input type="password" id="settingAdminPin" class="form-input" placeholder="1234" required>
+              </div>
+
+              <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; margin-top: 12px;">
+                حفظ الإعدادات ✓
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= نافذة: إضافة / تعديل عميل ================= -->
+  <div class="modal-backdrop" id="clientModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="clientModalTitle">إضافة عميل جديد وتحديد كود له</h3>
+        <button class="copy-btn" onclick="closeClientModal()" style="font-size: 20px;">✕</button>
+      </div>
+
+      <form onsubmit="saveClientForm(event)">
+        <input type="hidden" id="clientEditId">
+
+        <div class="form-group">
+          <label class="form-label">اسم العميل / اسم المعرض *</label>
+          <input type="text" id="clientFormName" class="form-input" placeholder="مثال: معرض الصفوة للأثاث" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رقم الهاتف / الواتساب</label>
+          <input type="text" id="clientFormPhone" class="form-input" placeholder="010xxxxxxxx">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">كود الدخول / الباسوورد الخاص بهذا العميل *</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="clientFormPasscode" class="form-input" style="font-weight: 800; letter-spacing: 1px;" placeholder="مثال: SAFWA-2024" required>
+            <button type="button" class="btn-secondary" onclick="generateRandomPasscode()" title="توليد كود عشوائي سريع">🎲 توليد كود</button>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">لن يتمكن العميل من فتح الكتالوج إلا بكتابة هذا الكود بالضبط.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ملاحظات العميل</label>
+          <textarea id="clientFormNotes" class="form-textarea" rows="2" placeholder="مثال: عميل جملة، خصم خاص..."></textarea>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="clientFormActive" checked style="width: 18px; height: 18px;">
+          <label for="clientFormActive" style="font-size: 14px; font-weight: 700; cursor: pointer;">تفعيل الحساب والسماح له بالدخول فوراً</label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeClientModal()">إلغاء</button>
+          <button type="submit" class="btn-primary-action">حفظ العميل والكود ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= نافذة: إضافة / تعديل منتج ================= -->
+  <div class="modal-backdrop" id="productModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="productModalTitle">إضافة موديل جديد للمعرض</h3>
+        <button class="copy-btn" onclick="closeProductModal()" style="font-size: 20px;">✕</button>
+      </div>
+
+      <form onsubmit="saveProductForm(event)">
+        <input type="hidden" id="productEditId">
+
+        <div class="form-group">
+          <label class="form-label">اسم الموديل *</label>
+          <input type="text" id="prodFormTitle" class="form-input" placeholder="مثال: ركنة كازابلانكا L-Shape 3×2م" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">القسم *</label>
+            <select id="prodFormCat" class="form-select">
+              <option value="ركنات مودرن">ركنات مودرن</option>
+              <option value="أطقم صالون">أطقم صالون</option>
+              <option value="أنتريهات">أنتريهات</option>
+              <option value="غرف نوم">غرف نوم</option>
+              <option value="غرف سفرة">غرف سفرة</option>
+              <option value="ترابيزات وبوفيهات">ترابيزات وبوفيهات</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">شارة الموديل (اختياري)</label>
+            <input type="text" id="prodFormBadge" class="form-input" placeholder="مثال: الأكثر طلباً / جديد">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">السعر للعميل (ج.م) *</label>
+            <input type="number" id="prodFormPrice" class="form-input" placeholder="25000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">السعر قبل الخصم (اختياري)</label>
+            <input type="number" id="prodFormOldPrice" class="form-input" placeholder="28000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الوصف والمقاسات والخامات</label>
+          <textarea id="prodFormDesc" class="form-textarea" rows="2" placeholder="المقاس، نوع الخشب، نوع القماش، كثافة الإسفنج..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">صورة الموديل</label>
+          <div class="img-upload-dropzone" onclick="document.getElementById('prodImgFile').click()">
+            <div style="font-size: 28px; margin-bottom: 6px;">📷</div>
+            <div style="font-size: 13px; font-weight: 700;">اضغط هنا لاختيار صورة من جهازك</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP</div>
+            <input type="file" id="prodImgFile" accept="image/*" style="display: none;" onchange="handleImagePicked(event)">
+            <img id="prodImgPreview" class="preview-thumb" src="" alt="معاينة">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeProductModal()">إلغاء</button>
+          <button type="submit" class="btn-primary-action">حفظ الموديل في المعرض ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= نافذة: إضافة / تعديل مدير ================= -->
+  <div class="modal-backdrop" id="staffModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="staffModalTitle">إضافة مدير جديد وتحديد باسوورد له</h3>
+        <button class="copy-btn" onclick="closeStaffModal()" style="font-size: 20px;">✕</button>
+      </div>
+
+      <form onsubmit="saveStaffForm(event)">
+        <input type="hidden" id="staffEditId">
+
+        <div class="form-group">
+          <label class="form-label">اسم المدير الكامل *</label>
+          <input type="text" id="staffFormName" class="form-input" placeholder="مثال: أحمد مصطفى — مدير المعرض" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">اسم المستخدم لتسجيل الدخول (Login Username) *</label>
+          <input type="text" id="staffFormUser" class="form-input" placeholder="مثال: ahmed أو manager1" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">كلمة المرور / الباسوورد *</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="staffFormPass" class="form-input" style="font-weight: 800; letter-spacing: 1px;" placeholder="اكتب باسوورد قوي" required>
+            <button type="button" class="btn-secondary" onclick="generateAdminPasscode()" title="توليد باسوورد عشوائي">🎲 توليد باسوورد</button>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">يدخل به المدير في لوحة التحكم.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الرتبة والصلاحية</label>
+          <select id="staffFormRole" class="form-select">
+            <option value="admin">مشرف معرض (إدارة المنتجات، الأسعار، العملاء، الطلبات)</option>
+            <option value="super_admin">مدير عام (صلاحيات كاملة تشمل إدارة باقي المديرين)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="staffFormActive" checked style="width: 18px; height: 18px;">
+          <label for="staffFormActive" style="font-size: 14px; font-weight: 700; cursor: pointer;">تفعيل الحساب والسماح له بالدخول فوراً</label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeStaffModal()">إلغاء</button>
+          <button type="submit" class="btn-primary-action">حفظ بيانات المدير ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= نافذة: عرض باركود QR للموبايل ================= -->
+  <div class="modal-backdrop" id="qrModal">
+    <div class="modal-card" style="max-width: 380px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="qrModalTitle">مسح الباركود بالموبايل</h3>
+        <button class="copy-btn" onclick="closeQrModal()" style="font-size: 20px;">✕</button>
+      </div>
+      <div style="background: #fff; padding: 18px; border-radius: 16px; display: inline-block; margin: 12px auto;" id="qrCodeContainer"></div>
+      <div id="qrModalUrl" style="font-size: 12px; color: var(--accent-gold); word-break: break-all; margin: 8px 0; direction: ltr; font-weight: 700;"></div>
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        وجه كاميرا الآيفون أو أي هاتف نحو الباركود وسيفتح المعرض مباشرة في سفاري أو كروم.
+      </p>
+      <button class="btn-primary-action" style="width: 100%; justify-content: center;" onclick="copyCurrentQrUrl()">
+        نسخ هذا الرابط 📋
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= تنبيه فوري بوصول طلبية جديدة (صوت وبانر) ================= -->
+  <div id="orderNotificationToast" style="display: none; position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 999999; width: calc(100% - 32px); max-width: 540px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--accent-gold); border-radius: 16px; padding: 16px 20px; box-shadow: 0 20px 45px rgba(0,0,0,0.85);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 32px;">🛎️</span>
+        <div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--accent-gold);" id="orderToastTitle">📦 طلبية جديدة وصلت الآن!</div>
+          <div style="font-size: 13px; color: #fff; margin-top: 3px;" id="orderToastBody">أرسل أحد العملاء طلبية جديدة</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-right: auto;">
+        <button class="btn-primary-action" style="padding: 9px 14px; font-size: 13px; background: linear-gradient(135deg, var(--primary), #b45309);" onclick="viewIncomingOrder()">
+          عرض الطلبية 👁️
+        </button>
+        <button class="btn-secondary" style="padding: 9px 12px; font-size: 14px;" onclick="closeOrderToast()">
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminToken = localStorage.getItem('furniture_admin_token') || localStorage.getItem('furniture_admin_pin') || '';
+    let currentAdmin = JSON.parse(localStorage.getItem('furniture_admin_profile') || '{"name":"المدير العام"}');
+    let currentTab = 'clients';
+    let clientsData = [];
+    let productsData = [];
+    let ordersData = [];
+    let staffData = [];
+    let pendingImageBase64 = null;
+    let serverInfo = { localUrl: '', tunnelUrl: null, preferredUrl: window.location.origin };
+    let currentModalQrUrl = '';
+
+    // إعدادات الصوت والتنبيهات
+    let soundEnabled = localStorage.getItem('showroom_admin_sound') !== 'false';
+    let audioCtx = null;
+    let lastAdminNotifId = 0;
+    let adminNotifPollTimer = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    ['click', 'touchstart', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, () => {
+        try { initAudioContext(); } catch (e) {}
+      }, { passive: true });
+    });
+
+    function toggleSoundPreference() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('showroom_admin_sound', soundEnabled ? 'true' : 'false');
+      updateSoundUI();
+      if (soundEnabled) {
+        playOrderSound();
+        requestBrowserNotificationPermission();
+      }
+    }
+
+    function updateSoundUI() {
+      const icon = document.getElementById('soundIcon');
+      const label = document.getElementById('soundLabel');
+      if (icon && label) {
+        if (soundEnabled) {
+          icon.innerText = '🔔';
+          label.innerText = 'صوت الطلبيات: مفعّل';
+        } else {
+          icon.innerText = '🔕';
+          label.innerText = 'صوت الطلبيات: مكتوم';
+        }
+      }
+    }
+
+    function playOrderSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        // رنة 1: نغمة عالية واضحة
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(700, now);
+        osc1.frequency.exponentialRampToValueAtTime(950, now + 0.12);
+        gain1.gain.setValueAtTime(0.4, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.5);
+
+        // رنة 2: نغمة رنانة متابعة
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1250, now + 0.15);
+        osc2.frequency.exponentialRampToValueAtTime(1800, now + 0.35);
+        gain2.gain.setValueAtTime(0.5, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.85);
+      } catch (e) {
+        console.warn('Audio play error', e);
+      }
+    }
+
+    function requestBrowserNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    function triggerNewOrderAlert(notif) {
+      playOrderSound();
+
+      if (navigator.vibrate) {
+        try { navigator.vibrate([250, 100, 250, 100, 350]); } catch(e){}
+      }
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const n = new Notification(notif.title || '📦 طلبية جديدة بالمعرض!', {
+            body: notif.body || 'أرسل أحد العملاء طلبية جديدة.',
+            icon: '/logo-256.png',
+            badge: '/logo-256.png'
+          });
+          n.onclick = () => {
+            window.focus();
+            viewIncomingOrder();
+          };
+        } catch (e) {}
+      }
+
+      const toast = document.getElementById('orderNotificationToast');
+      const titleEl = document.getElementById('orderToastTitle');
+      const bodyEl = document.getElementById('orderToastBody');
+      if (toast && titleEl && bodyEl) {
+        titleEl.innerText = notif.title || '📦 طلبية جديدة وصلت الآن!';
+        bodyEl.innerText = notif.body || 'أرسل أحد العملاء طلبية جديدة';
+        toast.style.display = 'block';
+
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+          closeOrderToast();
+        }, 16000);
+      }
+    }
+
+    function closeOrderToast() {
+      const toast = document.getElementById('orderNotificationToast');
+      if (toast) toast.style.display = 'none';
+    }
+
+    function viewIncomingOrder() {
+      closeOrderToast();
+      switchTab('orders');
+      loadOrders();
+    }
+
+    async function pollAdminNotifications() {
+      if (!adminToken) return;
+      try {
+        const res = await fetch(`/api/admin/notifications/poll?last_id=${lastAdminNotifId}`, {
+          headers: getAdminHeaders()
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (lastAdminNotifId === 0) {
+          lastAdminNotifId = data.maxId || 0;
+          return;
+        }
+
+        if (data.notifications && data.notifications.length > 0) {
+          for (const item of data.notifications) {
+            if (item.id > lastAdminNotifId) {
+              lastAdminNotifId = item.id;
+              if (item.type === 'new_order') {
+                triggerNewOrderAlert(item);
+              }
+            }
+          }
+          loadOrders();
+          loadStats();
+        }
+      } catch (err) {}
+    }
+
+    function startAdminNotificationLoop() {
+      if (adminNotifPollTimer) clearInterval(adminNotifPollTimer);
+      pollAdminNotifications();
+      adminNotifPollTimer = setInterval(pollAdminNotifications, 4000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSoundUI();
+      loadServerInfo();
+      if (adminToken) {
+        verifyAdminSession(adminToken);
+      }
+    });
+
+    function getAdminHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken,
+        'x-admin-pin': adminToken
+      };
+    }
+
+    async function loadServerInfo() {
+      try {
+        const res = await fetch('/api/server-info');
+        const d = await res.json();
+        serverInfo = d;
+        const mainUrl = d.preferredUrl || window.location.origin;
+        const adminUrl = mainUrl + '/admin';
+        const boxAdmin = document.getElementById('boxAdminUrl');
+        const boxCat = document.getElementById('boxCatalogUrl');
+        if (boxAdmin) boxAdmin.innerText = adminUrl;
+        if (boxCat) boxCat.innerText = mainUrl;
+      } catch (e) {
+        console.error('loadServerInfo error', e);
+      }
+    }
+
+    function copyUnifiedUrl(target) {
+      const base = serverInfo.preferredUrl || window.location.origin;
+      if (target === 'admin') {
+        copyText(base + '/admin', 'تم نسخ رابط الأدمن للموبايل واللاب بنجاح! جاهز للإرسال على واتساب.');
+      } else {
+        copyText(base, 'تم نسخ رابط المعرض للعميل والعامل بنجاح! جاهز للإرسال على واتساب.');
+      }
+    }
+
+    function showAdminQr() {
+      const base = serverInfo.preferredUrl || window.location.origin;
+      showClientQr('لوحة الأدمن (لموبايلي والمديرين)', base + '/admin');
+    }
+
+    function showCatalogQr() {
+      const base = serverInfo.preferredUrl || window.location.origin;
+      showClientQr('معرض DOUBLE FURNITURE (للعميل والعامل)', base);
+    }
+
+    function toggleAdminPassVisibility() {
+      const el = document.getElementById('adminPinInput');
+      if (el) el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    // تسجيل دخول الإدارة
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('adminUserInput').value.trim();
+      const password = document.getElementById('adminPinInput').value.trim();
+      if (!password) return;
+
+      const errEl = document.getElementById('pinError');
+      errEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, pin: password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+        }
+
+        adminToken = data.token || password;
+        currentAdmin = data.admin || { name: 'المدير العام' };
+        localStorage.setItem('furniture_admin_token', adminToken);
+        localStorage.setItem('furniture_admin_pin', adminToken);
+        localStorage.setItem('furniture_admin_profile', JSON.stringify(currentAdmin));
+
+        document.getElementById('adminLockScreen').style.display = 'none';
+        document.getElementById('activeAdminDisplay').innerText = currentAdmin.name;
+
+        if (data.showroom && data.showroom.name) {
+          document.getElementById('sideShowroomName').innerText = data.showroom.name;
+        }
+
+        await refreshDashboard();
+        startAdminNotificationLoop();
+        requestBrowserNotificationPermission();
+      } catch (err) {
+        errEl.innerText = err.message;
+        errEl.style.display = 'block';
+      }
+    }
+
+    async function verifyAdminSession(token) {
+      try {
+        const res = await fetch('/api/admin/stats', { headers: getAdminHeaders() });
+        if (!res.ok) throw new Error('انتهت الجلسة');
+        document.getElementById('adminLockScreen').style.display = 'none';
+        if (currentAdmin && currentAdmin.name) {
+          document.getElementById('activeAdminDisplay').innerText = currentAdmin.name;
+        }
+        await refreshDashboard();
+        startAdminNotificationLoop();
+      } catch (err) {
+        adminLogout();
+      }
+    }
+
+    function adminLogout() {
+      if (adminNotifPollTimer) clearInterval(adminNotifPollTimer);
+      localStorage.removeItem('furniture_admin_token');
+      localStorage.removeItem('furniture_admin_pin');
+      localStorage.removeItem('furniture_admin_profile');
+      adminToken = '';
+      document.getElementById('adminLockScreen').style.display = 'flex';
+      document.getElementById('adminPinInput').value = '';
+    }
+
+    async function refreshDashboard() {
+      await Promise.all([loadServerInfo(), loadStats(), loadClients(), loadProducts(), loadOrders(), loadStaff(), loadSettings()]);
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/stats', { headers: getAdminHeaders() });
+        const d = await res.json();
+        document.getElementById('statClients').innerText = d.clientsActive + ' / ' + d.clientsTotal;
+        document.getElementById('statProducts').innerText = d.productsTotal;
+        document.getElementById('statOrders').innerText = d.ordersTotal;
+        document.getElementById('statSales').innerText = (d.ordersSum || 0).toLocaleString('ar-EG') + ' ج.م';
+        document.getElementById('badgeClientsCount').innerText = d.clientsTotal;
+        document.getElementById('badgeProductsCount').innerText = d.productsTotal;
+        document.getElementById('badgeOrdersCount').innerText = d.newOrders > 0 ? `${d.newOrders} جديد` : d.ordersTotal;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // ================= تبديل التبويبات =================
+    function switchTab(tab) {
+      currentTab = tab;
+      const tabs = ['clients', 'products', 'orders', 'staff', 'settings'];
+      const titles = {
+        clients: 'إدارة العملاء وكلمات المرور',
+        products: 'الموديلات والأسعار بالمعرض',
+        orders: 'الطلبيات المستلمة',
+        staff: 'فريق الإدارة والمديرين (صلاحيات وكلمات مرور)',
+        settings: 'إعدادات المعرض'
+      };
+
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (el) el.style.display = t === tab ? 'block' : 'none';
+      });
+
+      document.querySelectorAll('.nav-item').forEach((item, idx) => {
+        item.classList.toggle('active', tabs[idx] === tab);
+      });
+
+      document.getElementById('pageTitleText').innerText = titles[tab];
+
+      const actBtn = document.getElementById('headerActionBtn');
+      if (tab === 'clients') {
+        actBtn.style.display = 'flex';
+        actBtn.innerHTML = '<span>➕ إضافة عميل جديد</span>';
+        actBtn.onclick = openAddClientModal;
+      } else if (tab === 'products') {
+        actBtn.style.display = 'flex';
+        actBtn.innerHTML = '<span>➕ إضافة موديل أثاث</span>';
+        actBtn.onclick = openAddProductModal;
+      } else if (tab === 'staff') {
+        actBtn.style.display = 'flex';
+        actBtn.innerHTML = '<span>➕ إضافة مدير جديد</span>';
+        actBtn.onclick = openAddStaffModal;
+      } else {
+        actBtn.style.display = 'none';
+      }
+    }
+
+    // ================= إدارة العملاء =================
+    async function loadClients() {
+      try {
+        const res = await fetch('/api/admin/clients', { headers: getAdminHeaders() });
+        const data = await res.json();
+        clientsData = data.clients || [];
+        renderClientsTable(clientsData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderClientsTable(list) {
+      const tbody = document.getElementById('clientsTableBody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا يوجد عملاء مضافين حالياً. اضغط "إضافة عميل جديد" لتحديد أول باسوورد.</td></tr>`;
+        return;
+      }
+
+      // اختيار الرابط الحقيقي للموبايل (سواء أونلاين أو شبكة الواي فاي)
+      const baseMobileUrl = serverInfo.preferredUrl || window.location.origin;
+
+      tbody.innerHTML = list.map(c => {
+        const directLink = `${baseMobileUrl}/?code=${encodeURIComponent(c.passcode)}`;
+        return `
+          <tr>
+            <td>
+              <strong style="color:#fff; font-size:15px;">${c.name}</strong>
+              ${c.notes ? `<div style="font-size:12px; color:var(--text-muted);">${c.notes}</div>` : ''}
+            </td>
+            <td>${c.phone || '<span style="color:#64748b;">—</span>'}</td>
+            <td>
+              <div class="passcode-pill">
+                <span>🔑</span>
+                <span>${c.passcode}</span>
+                <button class="copy-btn" onclick="copyText('${c.passcode}', 'تم نسخ كود الدخول!')" title="نسخ الكود">📋</button>
+              </div>
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-secondary" style="font-size:12px; padding:6px 10px; font-weight:700;" onclick="copyText('${directLink}', 'تم نسخ رابط الموبايل الخاص بهذا العميل!')">
+                  🔗 نسخ رابط الموبايل
+                </button>
+                <button class="btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="showClientQr('${c.name.replace(/'/g, "\\'")}', '${directLink}')" title="عرض باركود QR لمسحه بالموبايل">
+                  📲 باركود
+                </button>
+              </div>
+            </td>
+            <td>
+              <div class="switch-wrap ${c.is_active ? 'switch-active' : ''}" onclick="toggleClientActive(${c.id}, ${c.is_active ? 0 : 1})">
+                <div class="switch-box"></div>
+                <span style="font-size:12px; font-weight:700; color:${c.is_active ? 'var(--success)' : 'var(--danger)'}">
+                  ${c.is_active ? 'مفعل' : 'موقوف'}
+                </span>
+              </div>
+            </td>
+            <td>
+              <strong>${c.orders_count || 0}</strong> طلب
+            </td>
+            <td style="font-size:12px; color:var(--text-muted);">
+              ${c.last_login_at ? c.last_login_at.slice(0, 16) : 'لم يدخل بعد'}
+            </td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-secondary" style="padding:4px 8px;" onclick="openEditClientModal(${c.id})">✏️</button>
+                <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteClient(${c.id})">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // دوال عرض ومسح الباركود للموبايل
+    function showClientQr(clientName, url) {
+      currentModalQrUrl = url;
+      document.getElementById('qrModalTitle').innerText = `باركود الدخول: ${clientName}`;
+      document.getElementById('qrModalUrl').innerText = url;
+      const container = document.getElementById('qrCodeContainer');
+      container.innerHTML = '';
+      if (window.QRCode) {
+        new QRCode(container, {
+          text: url,
+          width: 200,
+          height: 200,
+          colorDark: '#0b0f19',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+      document.getElementById('qrModal').style.display = 'flex';
+    }
+
+    function showQrForUrl() {
+      const url = serverInfo.preferredUrl || window.location.origin;
+      showClientQr('المعرض العام', url);
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').style.display = 'none';
+    }
+
+    function copyCurrentQrUrl() {
+      if (currentModalQrUrl) {
+        copyText(currentModalQrUrl, 'تم نسخ الرابط بنجاح!');
+      }
+    }
+
+    function filterClients() {
+      const q = document.getElementById('clientSearchInput').value.trim().toLowerCase();
+      const filtered = clientsData.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.passcode && c.passcode.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q))
+      );
+      renderClientsTable(filtered);
+    }
+
+    function openAddClientModal() {
+      document.getElementById('clientEditId').value = '';
+      document.getElementById('clientModalTitle').innerText = 'إضافة عميل جديد وتحديد كود له';
+      document.getElementById('clientFormName').value = '';
+      document.getElementById('clientFormPhone').value = '';
+      document.getElementById('clientFormNotes').value = '';
+      document.getElementById('clientFormActive').checked = true;
+      generateRandomPasscode();
+      document.getElementById('clientModal').style.display = 'flex';
+    }
+
+    function openEditClientModal(id) {
+      const c = clientsData.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('clientEditId').value = c.id;
+      document.getElementById('clientModalTitle').innerText = 'تعديل بيانات العميل وكود الدخول';
+      document.getElementById('clientFormName').value = c.name;
+      document.getElementById('clientFormPhone').value = c.phone || '';
+      document.getElementById('clientFormPasscode').value = c.passcode;
+      document.getElementById('clientFormNotes').value = c.notes || '';
+      document.getElementById('clientFormActive').checked = !!c.is_active;
+      document.getElementById('clientModal').style.display = 'flex';
+    }
+
+    function closeClientModal() {
+      document.getElementById('clientModal').style.display = 'none';
+    }
+
+    function generateRandomPasscode() {
+      const prefixes = ['WOOD', 'SOFA', 'SALON', 'ROKNA', 'HOME', 'BED'];
+      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const num = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('clientFormPasscode').value = `${prefix}-${num}`;
+    }
+
+    async function saveClientForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('clientEditId').value;
+      const name = document.getElementById('clientFormName').value.trim();
+      const phone = document.getElementById('clientFormPhone').value.trim();
+      const passcode = document.getElementById('clientFormPasscode').value.trim();
+      const notes = document.getElementById('clientFormNotes').value.trim();
+      const is_active = document.getElementById('clientFormActive').checked;
+
+      const url = id ? `/api/admin/clients/${id}` : '/api/admin/clients';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ name, phone, passcode, notes, is_active })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'فشل حفظ العميل');
+
+        closeClientModal();
+        await refreshDashboard();
+        alert('تم حفظ بيانات العميل وكود الدخول بنجاح ✓');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function toggleClientActive(id, newStatus) {
+      try {
+        const res = await fetch(`/api/admin/clients/${id}`, {
+          method: 'PUT',
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ is_active: !!newStatus })
+        });
+        if (!res.ok) throw new Error('فشل تغيير الحالة');
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteClient(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا العميل؟ لن يتمكن من فتح المعرض بعد الآن.')) return;
+      try {
+        const res = await fetch(`/api/admin/clients/${id}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+        if (!res.ok) throw new Error('فشل الحذف');
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // ================= إدارة المنتجات والمعرض =================
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/admin/products', { headers: getAdminHeaders() });
+        const data = await res.json();
+        productsData = data.products || [];
+        renderProductsTable(productsData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderProductsTable(list) {
+      const tbody = document.getElementById('productsTableBody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">لا توجد موديلات مضافة حالياً. اضغط "إضافة موديل أثاث جديد".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => `
+        <tr>
+          <td>
+            <img src="${p.image_url}" style="width:60px; height:50px; object-fit:cover; border-radius:8px; background:#0f172a;" alt="${p.title}">
+          </td>
+          <td>
+            <strong style="color:#fff;">${p.title}</strong>
+            ${p.badge ? `<span style="font-size:11px; background:var(--primary); color:#fff; padding:2px 6px; border-radius:4px; margin-right:6px;">${p.badge}</span>` : ''}
+          </td>
+          <td><span style="color:var(--accent-gold); font-weight:700;">${p.category}</span></td>
+          <td>
+            <strong style="font-size:16px; color:#fff;">${p.price.toLocaleString('ar-EG')} ج.م</strong>
+            ${p.old_price > p.price ? `<div style="font-size:12px; color:#64748b; text-decoration:line-through;">${p.old_price.toLocaleString('ar-EG')} ج.م</div>` : ''}
+          </td>
+          <td style="font-size:13px; color:var(--text-muted); max-width:240px;">${p.description || '—'}</td>
+          <td>
+            <span style="color:${p.is_available ? 'var(--success)' : 'var(--danger)'}; font-weight:700;">
+              ${p.is_available ? 'معروض للعملاء ✓' : 'مخفي ✕'}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-secondary" style="padding:4px 8px;" onclick="openEditProductModal(${p.id})">✏️</button>
+              <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteProduct(${p.id})">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterProducts() {
+      const q = document.getElementById('productSearchInput').value.trim().toLowerCase();
+      const filtered = productsData.filter(p => 
+        (p.title && p.title.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.description && p.description.toLowerCase().includes(q))
+      );
+      renderProductsTable(filtered);
+    }
+
+    function openAddProductModal() {
+      document.getElementById('productEditId').value = '';
+      document.getElementById('productModalTitle').innerText = 'إضافة موديل أثاث جديد';
+      document.getElementById('prodFormTitle').value = '';
+      document.getElementById('prodFormPrice').value = '';
+      document.getElementById('prodFormOldPrice').value = '';
+      document.getElementById('prodFormDesc').value = '';
+      document.getElementById('prodFormBadge').value = '';
+      document.getElementById('prodImgPreview').style.display = 'none';
+      pendingImageBase64 = null;
+      document.getElementById('productModal').style.display = 'flex';
+    }
+
+    function openEditProductModal(id) {
+      const p = productsData.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('productEditId').value = p.id;
+      document.getElementById('productModalTitle').innerText = 'تعديل موديل الأثاث والسعر';
+      document.getElementById('prodFormTitle').value = p.title;
+      document.getElementById('prodFormCat').value = p.category;
+      document.getElementById('prodFormPrice').value = p.price;
+      document.getElementById('prodFormOldPrice').value = p.old_price || '';
+      document.getElementById('prodFormDesc').value = p.description || '';
+      document.getElementById('prodFormBadge').value = p.badge || '';
+
+      const prev = document.getElementById('prodImgPreview');
+      prev.src = p.image_url;
+      prev.style.display = 'block';
+      pendingImageBase64 = null;
+
+      document.getElementById('productModal').style.display = 'flex';
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').style.display = 'none';
+    }
+
+    function handleImagePicked(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingImageBase64 = reader.result;
+        const prev = document.getElementById('prodImgPreview');
+        prev.src = reader.result;
+        prev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function saveProductForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('productEditId').value;
+      const title = document.getElementById('prodFormTitle').value.trim();
+      const category = document.getElementById('prodFormCat').value;
+      const price = parseFloat(document.getElementById('prodFormPrice').value);
+      const old_price = parseFloat(document.getElementById('prodFormOldPrice').value) || 0;
+      const description = document.getElementById('prodFormDesc').value.trim();
+      const badge = document.getElementById('prodFormBadge').value.trim();
+
+      const payload = {
+        title,
+        category,
+        price,
+        old_price,
+        description,
+        badge,
+        image_base64: pendingImageBase64
+      };
+
+      const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: getAdminHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'فشل حفظ الموديل');
+
+        closeProductModal();
+        await refreshDashboard();
+        alert('تم حفظ الموديل وتحديث الكتالوج بنجاح ✓');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('هل تريد حذف هذا الموديل من المعرض نهائياً؟')) return;
+      try {
+        const res = await fetch(`/api/admin/products/${id}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+        if (!res.ok) throw new Error('فشل الحذف');
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // ================= سجل الطلبيات المستلمة =================
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/admin/orders', { headers: getAdminHeaders() });
+        const data = await res.json();
+        ordersData = data.orders || [];
+        renderOrdersTable(ordersData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderOrdersTable(list) {
+      const tbody = document.getElementById('ordersTableBody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا توجد طلبيات مستلمة بعد. عندما يطلب أي عميل ستظهر تفاصيلها هنا فوراً.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(ord => {
+        const itemsListHtml = (ord.items || []).map(it => `
+          <div>• <strong>${it.product_title}</strong> (العدد: ${it.quantity}) = ${it.subtotal.toLocaleString('ar-EG')} ج.م</div>
+        `).join('');
+
+        let statusClass = 'status-new';
+        if (ord.status === 'قيد التنفيذ') statusClass = 'status-progress';
+        if (ord.status === 'تم التسليم' || ord.status === 'جاهز') statusClass = 'status-ready';
+        if (ord.status === 'ملغي') statusClass = 'status-cancelled';
+
+        return `
+          <tr>
+            <td><strong style="color:var(--accent-gold);">${ord.order_number}</strong></td>
+            <td>
+              <strong style="color:#fff;">${ord.client_name}</strong>
+              ${ord.client_phone ? `<div style="font-size:12px; color:var(--text-muted);">${ord.client_phone}</div>` : ''}
+            </td>
+            <td style="font-size:12px; color:var(--text-muted);">${ord.created_at}</td>
+            <td style="font-size:13px; max-width:280px;">${itemsListHtml}</td>
+            <td><strong style="color:#fff; font-size:16px;">${ord.total_amount.toLocaleString('ar-EG')} ج.م</strong></td>
+            <td style="font-size:12px; color:#cbd5e1;">${ord.notes || '—'}</td>
+            <td>
+              <select class="form-select" style="padding:4px 8px; font-size:12px;" onchange="updateOrderStatus(${ord.id}, this.value)">
+                <option value="جديد" ${ord.status === 'جديد' ? 'selected' : ''}>جديد</option>
+                <option value="قيد التنفيذ" ${ord.status === 'قيد التنفيذ' ? 'selected' : ''}>قيد التنفيذ</option>
+                <option value="جاهز للتسليم" ${ord.status === 'جاهز للتسليم' ? 'selected' : ''}>جاهز للتسليم</option>
+                <option value="تم التسليم" ${ord.status === 'تم التسليم' ? 'selected' : ''}>تم التسليم</option>
+                <option value="ملغي" ${ord.status === 'ملغي' ? 'selected' : ''}>ملغي</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteOrder(${ord.id})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function updateOrderStatus(id, status) {
+      try {
+        await fetch(`/api/admin/orders/${id}/status`, {
+          method: 'PUT',
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ status })
+        });
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm('هل تريد حذف هذه الطلبية من السجل؟')) return;
+      try {
+        await fetch(`/api/admin/orders/${id}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // ================= إدارة المديرين والباسووردات =================
+    async function loadStaff() {
+      try {
+        const res = await fetch('/api/admin/staff', { headers: getAdminHeaders() });
+        const data = await res.json();
+        staffData = data.staff || [];
+        document.getElementById('badgeStaffCount').innerText = staffData.length;
+        renderStaffTable(staffData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderStaffTable(list) {
+      const tbody = document.getElementById('staffTableBody');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا يوجد مديرين مضافين.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(s => {
+        const roleLabel = s.role === 'super_admin' ? '👑 مدير عام (كامل الصلاحيات)' : '👔 مشرف صالة ومبيعات';
+        return `
+          <tr>
+            <td><strong style="color:#fff; font-size:15px;">${s.name}</strong></td>
+            <td><code style="background:#0f172a; padding:4px 8px; border-radius:6px; color:var(--info); font-weight:700;">${s.username}</code></td>
+            <td>
+              <div class="passcode-pill">
+                <span>🔑</span>
+                <span>${s.password}</span>
+                <button class="copy-btn" onclick="copyText('${s.password}', 'تم نسخ باسوورد المدير!')" title="نسخ الباسوورد">📋</button>
+              </div>
+            </td>
+            <td><span style="font-size:12px; font-weight:700; color:var(--accent-gold);">${roleLabel}</span></td>
+            <td>
+              <div class="switch-wrap ${s.is_active ? 'switch-active' : ''}" onclick="toggleStaffActive(${s.id}, ${s.is_active ? 0 : 1})">
+                <div class="switch-box"></div>
+                <span style="font-size:12px; font-weight:700; color:${s.is_active ? 'var(--success)' : 'var(--danger)'}">
+                  ${s.is_active ? 'مفعل' : 'موقوف'}
+                </span>
+              </div>
+            </td>
+            <td style="font-size:12px; color:var(--text-muted);">${s.created_at || '—'}</td>
+            <td style="font-size:12px; color:var(--text-muted);">${s.last_login_at ? s.last_login_at.slice(0, 16) : 'لم يدخل بعد'}</td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-secondary" style="padding:4px 8px;" onclick="openEditStaffModal(${s.id})">✏️</button>
+                <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteStaff(${s.id})">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterStaff() {
+      const q = document.getElementById('staffSearchInput').value.trim().toLowerCase();
+      const filtered = staffData.filter(s =>
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.username && s.username.toLowerCase().includes(q))
+      );
+      renderStaffTable(filtered);
+    }
+
+    function openAddStaffModal() {
+      document.getElementById('staffEditId').value = '';
+      document.getElementById('staffModalTitle').innerText = 'إضافة مدير جديد وتحديد باسوورد له';
+      document.getElementById('staffFormName').value = '';
+      document.getElementById('staffFormUser').value = '';
+      document.getElementById('staffFormPass').value = '';
+      document.getElementById('staffFormRole').value = 'admin';
+      document.getElementById('staffFormActive').checked = true;
+      generateAdminPasscode();
+      document.getElementById('staffModal').style.display = 'flex';
+    }
+
+    function openEditStaffModal(id) {
+      const s = staffData.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('staffEditId').value = s.id;
+      document.getElementById('staffModalTitle').innerText = 'تعديل بيانات المدير والباسوورد';
+      document.getElementById('staffFormName').value = s.name;
+      document.getElementById('staffFormUser').value = s.username;
+      document.getElementById('staffFormPass').value = s.password;
+      document.getElementById('staffFormRole').value = s.role || 'admin';
+      document.getElementById('staffFormActive').checked = !!s.is_active;
+      document.getElementById('staffModal').style.display = 'flex';
+    }
+
+    function closeStaffModal() {
+      document.getElementById('staffModal').style.display = 'none';
+    }
+
+    function generateAdminPasscode() {
+      const num = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('staffFormPass').value = `ADM-${num}`;
+    }
+
+    async function saveStaffForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('staffEditId').value;
+      const name = document.getElementById('staffFormName').value.trim();
+      const username = document.getElementById('staffFormUser').value.trim();
+      const password = document.getElementById('staffFormPass').value.trim();
+      const role = document.getElementById('staffFormRole').value;
+      const is_active = document.getElementById('staffFormActive').checked;
+
+      const url = id ? `/api/admin/staff/${id}` : '/api/admin/staff';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ name, username, password, role, is_active })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'فشل حفظ المدير');
+
+        closeStaffModal();
+        await refreshDashboard();
+        alert('تم حفظ حساب المدير وباسوورده بنجاح ✓');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function toggleStaffActive(id, newStatus) {
+      try {
+        const res = await fetch(`/api/admin/staff/${id}`, {
+          method: 'PUT',
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ is_active: !!newStatus })
+        });
+        if (!res.ok) throw new Error('فشل تغيير الحالة');
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteStaff(id) {
+      if (!confirm('هل تريد حذف هذا المدير؟ لن يتمكن من فتح لوحة التحكم بعد الآن.')) return;
+      try {
+        const res = await fetch(`/api/admin/staff/${id}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'فشل الحذف');
+        await refreshDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // ================= الإعدادات =================
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings', { headers: getAdminHeaders() });
+        const data = await res.json();
+        const s = data.settings || {};
+        document.getElementById('settingShowroomName').value = s.showroom_name || 'معرض DOUBLE FURNITURE';
+        document.getElementById('settingWhatsapp').value = s.whatsapp_phone || '';
+        document.getElementById('settingWelcome').value = s.welcome_message || '';
+        document.getElementById('settingAdminPin').value = s.admin_pin || '1234';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function saveSettings(e) {
+      e.preventDefault();
+      const showroom_name = document.getElementById('settingShowroomName').value.trim();
+      const whatsapp_phone = document.getElementById('settingWhatsapp').value.trim();
+      const welcome_message = document.getElementById('settingWelcome').value.trim();
+      const admin_pin = document.getElementById('settingAdminPin').value.trim();
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: getAdminHeaders(),
+          body: JSON.stringify({ showroom_name, whatsapp_phone, welcome_message, admin_pin })
+        });
+        if (!res.ok) throw new Error('فشل حفظ الإعدادات');
+        document.getElementById('sideShowroomName').innerText = showroom_name;
+        alert('تم حفظ الإعدادات بنجاح ✓');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // نسخ نص إلى الحافظة
+    function copyText(txt, msg) {
+      navigator.clipboard.writeText(txt).then(() => {
+        alert(msg || 'تم النسخ!');
+      });
+    }
+  </script>
+</body>
+</html>

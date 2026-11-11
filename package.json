@@ -1,0 +1,13 @@
+{
+  "name": "furniture-showroom",
+  "version": "1.0.0",
+  "description": "معرض وكتالوج أثاث خاص محمي بباسوورد للعملاء مع لوحة تحكم كاملة",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1"
+  }
+}
