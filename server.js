@@ -34,6 +34,8 @@ let tunnelProc = null;
 let tunnelRestartTimer = null;
 
 function getTunnelUrl() {
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  if (process.env.RAILWAY_STATIC_URL) return `https://${process.env.RAILWAY_STATIC_URL}`;
   if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL;
   if (currentTunnelUrl) return currentTunnelUrl;
   const tunnelFile = path.join(__dirname, 'public', 'tunnel-url.txt');
@@ -47,7 +49,7 @@ function getTunnelUrl() {
 }
 
 function startCloudflareTunnel() {
-  if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL || process.env.RAILWAY_STATIC_URL) {
+  if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL || process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN) {
     console.log('[Cloud]: يعمل الآن على السيرفر السحابي (Cloud). النفق المحلي غير مطلوب.');
     return;
   }
