@@ -28,6 +28,46 @@ function getLocalIpAddress() {
   return 'localhost';
 }
 
+// دالة تصحيح وتنسيق أرقام الواتساب المصرية والدولية بدقة 100%
+function normalizeWhatsappPhone(phone) {
+  if (!phone) return '';
+  const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  let clean = String(phone).trim();
+  for (let i = 0; i < 10; i++) {
+    clean = clean.split(arabicDigits[i]).join(String(i));
+  }
+  clean = clean.replace(/[^0-9]/g, '');
+
+  if (clean.startsWith('0020')) {
+    clean = clean.slice(2);
+  } else if (/^01[0125][0-9]{8}$/.test(clean)) {
+    clean = '2' + clean;
+  } else if (/^1[0125][0-9]{8}$/.test(clean)) {
+    clean = '20' + clean;
+  }
+  return clean;
+}
+
+// جلب قائمة أرقام الواتساب المعتمدة للمتابعة
+function getShowroomWhatsappNumbers() {
+  let numbers = [];
+  try {
+    const raw = getSetting('whatsapp_numbers');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) numbers = parsed;
+    }
+  } catch (e) {}
+
+  if (numbers.length === 0) {
+    const legacy = getSetting('whatsapp_phone') || '';
+    if (legacy && legacy !== '201000000000') {
+      numbers.push({ id: 1, label: 'إدارة المعرض والمبيعات', phone: legacy, is_default: true });
+    }
+  }
+  return numbers;
+}
+
 // إدارة رابط ونفق Cloudflare الداخلي بشكل مباشر ومستقر
 let currentTunnelUrl = null;
 let tunnelProc = null;
@@ -294,6 +334,7 @@ app.post('/api/client/login', (req, res) => {
         name: getSetting('showroom_name'),
         welcome_message: getSetting('welcome_message'),
         whatsapp_phone: getSetting('whatsapp_phone'),
+        whatsapp_numbers: getShowroomWhatsappNumbers(),
         currency: getSetting('currency')
       }
     });
@@ -331,6 +372,7 @@ app.get('/api/catalog', requireClientAuth, (req, res) => {
         name: getSetting('showroom_name'),
         welcome_message: getSetting('welcome_message'),
         whatsapp_phone: getSetting('whatsapp_phone'),
+        whatsapp_numbers: getShowroomWhatsappNumbers(),
         currency: getSetting('currency')
       }
     });
@@ -435,10 +477,25 @@ app.post('/api/orders', requireClientAuth, (req, res) => {
     waText += `*الإجمالي:* *${totalAmount.toLocaleString('ar-EG')} ${currency}*\n`;
     if (notes) waText += `*ملاحظات إضافية:* ${notes}\n`;
 
-    const waPhone = getSetting('whatsapp_phone') || '';
-    const waUrl = waPhone
-      ? `https://wa.me/${waPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waText)}`
-      : `https://wa.me/?text=${encodeURIComponent(waText)}`;
+    const waNumbers = getShowroomWhatsappNumbers();
+    const whatsappLinks = waNumbers.map(n => {
+      const cleanP = normalizeWhatsappPhone(n.phone);
+      return {
+        label: n.label,
+        phone: n.phone,
+        url: cleanP ? `https://wa.me/${cleanP}?text=${encodeURIComponent(waText)}` : `https://wa.me/?text=${encodeURIComponent(waText)}`
+      };
+    });
+
+    let primaryWaUrl = '';
+    if (whatsappLinks.length > 0) {
+      const def = whatsappLinks.find(x => x.is_default) || whatsappLinks[0];
+      primaryWaUrl = def.url;
+    } else {
+      const rawPhone = getSetting('whatsapp_phone') || '';
+      const cleanP = normalizeWhatsappPhone(rawPhone);
+      primaryWaUrl = cleanP ? `https://wa.me/${cleanP}?text=${encodeURIComponent(waText)}` : `https://wa.me/?text=${encodeURIComponent(waText)}`;
+    }
 
     res.json({
       success: true,
@@ -446,7 +503,8 @@ app.post('/api/orders', requireClientAuth, (req, res) => {
       orderNumber: orderNum,
       totalAmount,
       totalCount,
-      whatsappUrl: waUrl,
+      whatsappUrl: primaryWaUrl,
+      whatsappLinks,
       whatsappText: waText
     });
   } catch (err) {
@@ -963,11 +1021,22 @@ app.put('/api/admin/notifications/read-all', requireAdminAuth, (req, res) => {
   }
 });
 
+// فحص صحة واستقرار الخادم السحابي ومنع توقفه
+app.get(['/health', '/api/health'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    memory: process.memoryUsage()
+  });
+});
+
 app.get('/api/admin/settings', requireAdminAuth, (req, res) => {
   try {
     const settingsRows = db.prepare('SELECT key, value FROM settings').all();
     const settings = {};
     for (const s of settingsRows) settings[s.key] = s.value;
+    settings.whatsapp_numbers = getShowroomWhatsappNumbers();
     res.json({ settings });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -976,13 +1045,29 @@ app.get('/api/admin/settings', requireAdminAuth, (req, res) => {
 
 app.post('/api/admin/settings', requireAdminAuth, (req, res) => {
   try {
-    const { showroom_name, admin_pin, whatsapp_phone, currency, welcome_message, custom_public_url } = req.body;
+    const { showroom_name, admin_pin, whatsapp_phone, whatsapp_numbers, currency, welcome_message, custom_public_url } = req.body;
     if (showroom_name) setSetting('showroom_name', showroom_name.trim());
     if (admin_pin) setSetting('admin_pin', admin_pin.trim());
-    if (whatsapp_phone) setSetting('whatsapp_phone', whatsapp_phone.trim());
     if (currency) setSetting('currency', currency.trim());
     if (welcome_message) setSetting('welcome_message', welcome_message.trim());
     if (custom_public_url !== undefined) setSetting('custom_public_url', custom_public_url.trim());
+
+    if (Array.isArray(whatsapp_numbers)) {
+      const sanitized = whatsapp_numbers.map((n, idx) => ({
+        id: n.id || (idx + 1),
+        label: (n.label && n.label.trim()) || 'متابعة المعرض',
+        phone: String(n.phone || '').trim(),
+        is_default: !!n.is_default
+      }));
+      setSetting('whatsapp_numbers', JSON.stringify(sanitized));
+      const def = sanitized.find(x => x.is_default) || sanitized[0];
+      if (def && def.phone) {
+        setSetting('whatsapp_phone', def.phone);
+      }
+    } else if (whatsapp_phone) {
+      setSetting('whatsapp_phone', whatsapp_phone.trim());
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -994,8 +1079,18 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.use((req, res) => {
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'المسار غير موجود' });
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// معالج الأخطاء العام لضمان عدم توقف السيرفر تحت أي ظرف
+app.use((err, req, res, next) => {
+  console.error('[Global App Error Caught]:', err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'حدث خطأ مؤقت في السيرفر، تم استدراكه بنجاح.' });
 });
 
 // تشغيل الخادم مع حماية كاملة ضد التوقف

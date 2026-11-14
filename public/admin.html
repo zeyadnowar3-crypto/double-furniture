@@ -832,6 +832,7 @@
                   <th>الإجمالي</th>
                   <th>ملاحظات العميل</th>
                   <th>الحالة</th>
+                  <th>متابعة واتساب</th>
                   <th>إجراءات</th>
                 </tr>
               </thead>
@@ -940,9 +941,20 @@
                 <input type="text" id="settingShowroomName" class="form-input" required>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">رقم واتساب لاستلام الطلبات (بالكود الدولي مثلاً: 201012345678)</label>
-                <input type="text" id="settingWhatsapp" class="form-input" placeholder="2010xxxxxxxx" required>
+              <div class="form-group" style="background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div>
+                    <label class="form-label" style="margin-bottom: 2px; font-weight: 800; color: #fff;">📱 أرقام واتساب لاستلام ومتابعة الطلبات</label>
+                    <div style="font-size: 11px; color: var(--text-muted);">تقدر تضيف أكثر من رقم (مبيعات، إدارة، حسابات) - النظام يصحح الأرقام تلقائياً</div>
+                  </div>
+                  <button type="button" class="btn-secondary" onclick="addSettingWhatsappRow()" style="font-size: 12px; padding: 5px 12px; border-color: rgba(34,197,94,0.4); color: #22c55e; font-weight: 700;">
+                    ➕ إضافة رقم واتساب
+                  </button>
+                </div>
+
+                <div id="settingWhatsappList" style="display: flex; flex-direction: column; gap: 10px;">
+                  <!-- أرقام الواتساب ديناميكياً -->
+                </div>
               </div>
 
               <div class="form-group">
@@ -1601,12 +1613,15 @@
               </div>
             </td>
             <td>
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                 <button class="btn-secondary" style="font-size:12px; padding:6px 10px; font-weight:700;" onclick="copyText('${directLink}', 'تم نسخ رابط الموبايل الخاص بهذا العميل!')">
                   🔗 نسخ رابط الموبايل
                 </button>
                 <button class="btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="showClientQr('${c.name.replace(/'/g, "\\'")}', '${directLink}')" title="عرض باركود QR لمسحه بالموبايل">
                   📲 باركود
+                </button>
+                <button class="btn-secondary" style="font-size:12px; padding:6px 10px; color:#22c55e; border-color:rgba(34,197,94,0.4); font-weight:700;" onclick="sendClientInviteWhatsapp(${c.id})" title="إرسال رابط المعرض وكود الدخول للعميل على الواتساب مباشرة">
+                  💬 إرسال واتساب
                 </button>
               </div>
             </td>
@@ -2087,6 +2102,11 @@
               </select>
             </td>
             <td>
+              <button class="btn-secondary" style="background:#16a34a; color:#fff; border:none; padding:6px 12px; font-size:12px; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer;" onclick="followUpOrderWhatsapp(${ord.id})" title="متابعة تفاصيل الطلبية مع العميل عبر واتساب">
+                <span>💬 مراسلة العميل</span>
+              </button>
+            </td>
+            <td>
               <button class="btn-secondary" style="padding:4px 8px; color:var(--danger);" onclick="deleteOrder(${ord.id})">🗑️</button>
             </td>
           </tr>
@@ -2277,6 +2297,121 @@
       }
     }
 
+    // ================= معالجة أرقام الواتساب ومتابعة الطلبيات =================
+    function normalizeWhatsappPhone(phone) {
+      if (!phone) return '';
+      const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      let clean = String(phone).trim();
+      for (let i = 0; i < 10; i++) {
+        clean = clean.split(arabicDigits[i]).join(String(i));
+      }
+      clean = clean.replace(/[^0-9]/g, '');
+      if (clean.startsWith('0020')) {
+        clean = clean.slice(2);
+      } else if (/^01[0125][0-9]{8}$/.test(clean)) {
+        clean = '2' + clean;
+      } else if (/^1[0125][0-9]{8}$/.test(clean)) {
+        clean = '20' + clean;
+      }
+      return clean;
+    }
+
+    let settingWhatsappRows = []; // { id, label, phone, is_default }
+
+    function addSettingWhatsappRow(label = '', phone = '', isDefault = false) {
+      const newId = Date.now() + Math.floor(Math.random() * 1000);
+      settingWhatsappRows.push({
+        id: newId,
+        label: label || (settingWhatsappRows.length === 0 ? 'إدارة المبيعات' : 'متابعة الطلبيات'),
+        phone: phone || '',
+        is_default: isDefault || (settingWhatsappRows.length === 0)
+      });
+      renderSettingWhatsappList();
+    }
+
+    function removeSettingWhatsappRow(id) {
+      if (settingWhatsappRows.length <= 1) {
+        alert('يجب الإبقاء على رقم واتساب واحد على الأقل للمتابعة.');
+        return;
+      }
+      settingWhatsappRows = settingWhatsappRows.filter(r => r.id !== id);
+      if (!settingWhatsappRows.some(r => r.is_default)) {
+        settingWhatsappRows[0].is_default = true;
+      }
+      renderSettingWhatsappList();
+    }
+
+    function setSettingDefaultWhatsapp(id) {
+      settingWhatsappRows.forEach(r => r.is_default = (r.id === id));
+      renderSettingWhatsappList();
+    }
+
+    function renderSettingWhatsappList() {
+      const container = document.getElementById('settingWhatsappList');
+      if (!container) return;
+
+      if (settingWhatsappRows.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 10px;">لا يوجد أرقام مضافة. اضغط "إضافة رقم واتساب".</div>`;
+        return;
+      }
+
+      container.innerHTML = settingWhatsappRows.map(row => `
+        <div style="display: flex; gap: 8px; align-items: center; background: #0f172a; padding: 10px 12px; border-radius: 10px; border: 1px solid ${row.is_default ? 'var(--accent-gold)' : 'rgba(255,255,255,0.08)'};">
+          <input type="text" class="form-input" style="flex: 1; min-width: 100px; padding: 6px 10px; font-size: 13px;" placeholder="المسمى (مبيعات)" value="${row.label}" oninput="updateWhatsappRowData(${row.id}, 'label', this.value)">
+          <input type="text" class="form-input" style="flex: 1.4; min-width: 130px; padding: 6px 10px; font-size: 13px; direction: ltr; text-align: left;" placeholder="010xxxxxxxx" value="${row.phone}" oninput="updateWhatsappRowData(${row.id}, 'phone', this.value)">
+          <button type="button" class="btn-secondary" style="padding: 6px 10px; font-size: 11px; white-space: nowrap; ${row.is_default ? 'background: var(--accent-gold); color: #000; font-weight: 800;' : ''}" onclick="setSettingDefaultWhatsapp(${row.id})">
+            ${row.is_default ? '★ الأساسي' : 'تعيين كأساسي'}
+          </button>
+          <button type="button" style="background: rgba(239,68,68,0.2); color: var(--danger); border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="removeSettingWhatsappRow(${row.id})" title="حذف هذا الرقم">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function updateWhatsappRowData(id, key, val) {
+      const row = settingWhatsappRows.find(r => r.id === id);
+      if (row) row[key] = val;
+    }
+
+    function followUpOrderWhatsapp(orderId) {
+      const ord = ordersData.find(x => x.id === orderId);
+      if (!ord) return;
+      let targetPhone = ord.client_phone ? ord.client_phone.trim() : '';
+      if (!targetPhone) {
+        targetPhone = prompt(`رقم هاتف العميل (${ord.client_name}) غير مسجل في الطلبية، يرجى إدخال رقم الواتساب:`);
+      }
+      if (!targetPhone) return;
+
+      const cleanPhone = normalizeWhatsappPhone(targetPhone);
+      if (!cleanPhone) {
+        alert('رقم الهاتف المدخل غير صالح.');
+        return;
+      }
+
+      const itemsText = (ord.items || []).map((it, idx) => `${idx + 1}. *${it.product_title}* (العدد: ${it.quantity})`).join('\n');
+      const msg = `أهلاً بك يا فندم (${ord.client_name}) 🪑✨\nمعك إدارة معرض *DOUBLE FURNITURE* بخصوص طلبيتكم الكريمة رقم: *#${ord.order_number}*\n--------------------------\n*القطع المطلوبة:*\n${itemsText}\n--------------------------\n*إجمالي الطلبية:* *${ord.total_amount.toLocaleString('ar-EG')} ج.م*\n*حالة الطلبية الآن:* *${ord.status}*\n--------------------------\nيسعدنا خدمتكم دائماً لأي استفسار أو تفاصيل إضافية.`;
+
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function sendClientInviteWhatsapp(clientId) {
+      const c = clientsData.find(x => x.id === clientId);
+      if (!c) return;
+      let targetPhone = c.phone ? c.phone.trim() : '';
+      if (!targetPhone) {
+        targetPhone = prompt(`رقم هاتف العميل (${c.name}) غير مسجل، يرجى كتابة رقم الواتساب الخاص به:`);
+      }
+      const cleanPhone = normalizeWhatsappPhone(targetPhone);
+      const baseMobileUrl = serverInfo.preferredUrl || window.location.origin;
+      const directLink = `${baseMobileUrl}/?code=${encodeURIComponent(c.passcode)}`;
+      const msg = `أهلاً بك يا فندم (${c.name}) في معرض *DOUBLE FURNITURE* للأثاث 🛋️✨\n--------------------------\nيسعدنا دعوتكم لتصفح أحدث موديلات وأسعار الأثاث عبر الرابط الخاص بكم مباشرة على الموبايل:\n🔗 ${directLink}\n\n🔑 كود الدخول الخاص بكم: *${c.passcode}*\n--------------------------\nيمكنكم معاينة الصور وتفاصيل كل طقم وإرسال طلبياتكم بنقرة واحدة!`;
+
+      if (cleanPhone) {
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    }
+
     // ================= الإعدادات =================
     async function loadSettings() {
       try {
@@ -2284,9 +2419,29 @@
         const data = await res.json();
         const s = data.settings || {};
         document.getElementById('settingShowroomName').value = s.showroom_name || 'معرض DOUBLE FURNITURE';
-        document.getElementById('settingWhatsapp').value = s.whatsapp_phone || '';
         document.getElementById('settingWelcome').value = s.welcome_message || '';
         document.getElementById('settingAdminPin').value = s.admin_pin || '1234';
+
+        // تحميل قائمة أرقام الواتساب
+        settingWhatsappRows = [];
+        if (Array.isArray(s.whatsapp_numbers) && s.whatsapp_numbers.length > 0) {
+          settingWhatsappRows = s.whatsapp_numbers;
+        } else if (s.whatsapp_phone && s.whatsapp_phone !== '201000000000') {
+          settingWhatsappRows.push({
+            id: 1,
+            label: 'إدارة المبيعات',
+            phone: s.whatsapp_phone,
+            is_default: true
+          });
+        } else {
+          settingWhatsappRows.push({
+            id: 1,
+            label: 'إدارة المبيعات والطلبيات',
+            phone: '',
+            is_default: true
+          });
+        }
+        renderSettingWhatsappList();
       } catch (e) {
         console.error(e);
       }
@@ -2295,19 +2450,30 @@
     async function saveSettings(e) {
       e.preventDefault();
       const showroom_name = document.getElementById('settingShowroomName').value.trim();
-      const whatsapp_phone = document.getElementById('settingWhatsapp').value.trim();
       const welcome_message = document.getElementById('settingWelcome').value.trim();
       const admin_pin = document.getElementById('settingAdminPin').value.trim();
+
+      // تنظيف والتحقق من الأرقام
+      const whatsapp_numbers = settingWhatsappRows.map(r => ({
+        id: r.id,
+        label: r.label.trim() || 'المبيعات',
+        phone: r.phone.trim(),
+        is_default: !!r.is_default
+      }));
+
+      // تعيين أول رقم افتراضي كـ whatsapp_phone
+      const defRow = whatsapp_numbers.find(x => x.is_default) || whatsapp_numbers[0];
+      const whatsapp_phone = defRow ? defRow.phone : '';
 
       try {
         const res = await fetch('/api/admin/settings', {
           method: 'POST',
           headers: getAdminHeaders(),
-          body: JSON.stringify({ showroom_name, whatsapp_phone, welcome_message, admin_pin })
+          body: JSON.stringify({ showroom_name, whatsapp_phone, whatsapp_numbers, welcome_message, admin_pin })
         });
         if (!res.ok) throw new Error('فشل حفظ الإعدادات');
         document.getElementById('sideShowroomName').innerText = showroom_name;
-        alert('تم حفظ الإعدادات بنجاح ✓');
+        alert('تم حفظ الإعدادات وأرقام الواتساب بنجاح ✓');
       } catch (err) {
         alert(err.message);
       }

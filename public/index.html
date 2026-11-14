@@ -1153,9 +1153,11 @@
         وسيقوم فريق المعرض بمراجعتها والتواصل معك لتأكيد موعد التسليم.
       </p>
 
-      <a id="successWhatsAppBtn" class="btn-whatsapp-order" href="#" target="_blank" style="margin-bottom: 12px;">
-        <span>💬 فتح ومتابعة الطلب على واتساب</span>
-      </a>
+      <div id="successWhatsAppButtons" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+        <a id="successWhatsAppBtn" class="btn-whatsapp-order" href="#" target="_blank" style="margin-bottom: 0;">
+          <span>💬 فتح ومتابعة الطلب على واتساب</span>
+        </a>
+      </div>
 
       <button class="btn-enter" style="padding: 12px;" onclick="closeSuccessModal()">
         العودة لتصفح المعرض
@@ -1719,14 +1721,23 @@
         updateCartUI();
         renderProducts();
 
-        // إظهار نافذة النجاح مع رابط الواتساب
+        // إظهار نافذة النجاح مع روابط الواتساب المعتمدة
         document.getElementById('successOrderNum').innerText = data.orderNumber;
-        const waBtn = document.getElementById('successWhatsAppBtn');
-        if (data.whatsappUrl) {
-          waBtn.href = data.whatsappUrl;
-          waBtn.style.display = 'flex';
+        const btnContainer = document.getElementById('successWhatsAppButtons');
+        if (Array.isArray(data.whatsappLinks) && data.whatsappLinks.length > 0) {
+          btnContainer.innerHTML = data.whatsappLinks.map(lk => `
+            <a class="btn-whatsapp-order" href="${lk.url}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+              <span>💬 متابعة الطلب مع ${lk.label} (${lk.phone})</span>
+            </a>
+          `).join('');
+        } else if (data.whatsappUrl) {
+          btnContainer.innerHTML = `
+            <a class="btn-whatsapp-order" href="${data.whatsappUrl}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+              <span>💬 فتح ومتابعة الطلب على واتساب</span>
+            </a>
+          `;
         } else {
-          waBtn.style.display = 'none';
+          btnContainer.innerHTML = '';
         }
 
         document.getElementById('orderSuccessModal').style.display = 'flex';
@@ -1737,6 +1748,24 @@
 
     function closeSuccessModal() {
       document.getElementById('orderSuccessModal').style.display = 'none';
+    }
+
+    function normalizeWhatsappPhone(phone) {
+      if (!phone) return '';
+      const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      let clean = String(phone).trim();
+      for (let i = 0; i < 10; i++) {
+        clean = clean.split(arabicDigits[i]).join(String(i));
+      }
+      clean = clean.replace(/[^0-9]/g, '');
+      if (clean.startsWith('0020')) {
+        clean = clean.slice(2);
+      } else if (/^01[0125][0-9]{8}$/.test(clean)) {
+        clean = '2' + clean;
+      } else if (/^1[0125][0-9]{8}$/.test(clean)) {
+        clean = '20' + clean;
+      }
+      return clean;
     }
 
     // ================= نافذة تفاصيل وصور الطقم الكاملة =================
@@ -1808,7 +1837,9 @@
 
       // زر الواتساب للاستفسار المباشر عن هذا الموديل
       const waText = `مرحباً، أستفسر بخصوص هذا الموديل المعروض: ${prod.title} (كود #${prod.id}) بسعر ${prod.price.toLocaleString('ar-EG')} ج.م.`;
-      document.getElementById('detailWaBtn').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+      const showroomPhone = (clientSession && clientSession.showroom && clientSession.showroom.whatsapp_phone) ? clientSession.showroom.whatsapp_phone : '';
+      const cleanPhone = normalizeWhatsappPhone(showroomPhone);
+      document.getElementById('detailWaBtn').href = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}` : `https://wa.me/?text=${encodeURIComponent(waText)}`;
 
       // فتح النافذة
       document.getElementById('productDetailModal').style.display = 'flex';
