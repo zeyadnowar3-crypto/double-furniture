@@ -16,84 +16,129 @@
   <meta name="mobile-web-app-capable" content="yes">
   
   <link rel="manifest" href="/manifest-admin.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#120a05">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <script src="/js/qrcode.min.js"></script>
   <style>
     :root {
-      --bg: #0b0f19;
-      --sidebar-bg: #111827;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #d97706;
-      --primary-hover: #b45309;
-      --accent-gold: #fbbf24;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --success: #10b981;
-      --danger: #ef4444;
+      --wood-dark: #120a05;
+      --wood-deep: #1d0f07;
+      --wood-med: #2c160a;
+      --wood-light: #442311;
+      --gold-primary: #d4af37;
+      --gold-light: #f5d77f;
+      --gold-dark: #997316;
+      --gold-glow: rgba(212, 175, 55, 0.38);
+      --brass: #c5a059;
+      --cream: #fbf7ee;
+      --cream-dim: #d8cebe;
+      
+      --bg: #120a05;
+      --sidebar-bg: #1a0e07;
+      --topbar-bg: rgba(26, 13, 6, 0.95);
+      --card-bg: rgba(30, 16, 8, 0.94);
+      --card-border: rgba(212, 175, 55, 0.3);
+      --card-border-glow: rgba(245, 215, 127, 0.5);
+      --primary: #d4af37;
+      --primary-hover: #f5d77f;
+      --accent-gold: #f5d77f;
+      --text-main: #fbf7ee;
+      --text-muted: #c5a059;
+      --success: #2ebd6f;
+      --danger: #e04f4f;
       --info: #38bdf8;
       --radius: 14px;
+      --font: 'Cairo', 'Segoe UI', Tahoma, system-ui, -apple-system, sans-serif;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font);
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: var(--bg);
+      background-color: var(--wood-dark);
+      background-image: 
+        radial-gradient(ellipse at 50% 12%, rgba(84, 47, 26, 0.6) 0%, rgba(18, 10, 5, 0.98) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(0, 0, 0, 0.04) 2px, transparent 4px, transparent 24px),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0px, transparent 1px, transparent 120px);
+      background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
+      overflow-x: hidden;
     }
 
-    /* ================= شاشة قفل لوحة التحكم ================= */
+    /* شريط التمرير الفخم */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(18, 10, 5, 0.8); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gold-primary); }
+
+    /* ================= شاشة قفل لوحة التحكم (الملكية) ================= */
     #adminLockScreen {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at top, #1e293b 0%, #0b0f19 100%);
+      background: radial-gradient(ellipse at center, rgba(62, 33, 17, 0.9) 0%, rgba(18, 10, 5, 0.98) 100%);
       z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      backdrop-filter: blur(10px);
     }
 
     .lock-box {
-      background: #151c2e;
-      border: 1px solid var(--card-border);
+      background: linear-gradient(145deg, rgba(38, 20, 10, 0.96) 0%, rgba(22, 11, 5, 0.98) 100%);
+      border: 1.5px solid var(--card-border);
       border-radius: 24px;
-      padding: 40px 32px;
+      padding: 42px 34px;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lock-box::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), var(--gold-light), var(--gold-primary), transparent);
     }
 
     .lock-icon {
-      font-size: 50px;
+      font-size: 52px;
       margin-bottom: 14px;
+      filter: drop-shadow(0 0 16px var(--gold-glow));
     }
 
     .lock-title {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 24px;
+      font-weight: 900;
       margin-bottom: 8px;
+      color: var(--gold-light);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
     }
 
     .lock-desc {
-      color: var(--text-muted);
-      font-size: 13px;
+      color: var(--brass);
+      font-size: 13.5px;
       margin-bottom: 24px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .pin-input {
       width: 100%;
-      background: #0b0f19;
-      border: 2px solid var(--card-border);
+      background: rgba(18, 9, 4, 0.92);
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
       border-radius: 12px;
       padding: 14px;
       font-size: 20px;
@@ -102,24 +147,36 @@
       text-align: center;
       letter-spacing: 4px;
       margin-bottom: 16px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
+      transition: all 0.25s ease;
     }
 
     .pin-input:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: var(--gold-light);
+      background: rgba(28, 14, 7, 0.98);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 14px var(--gold-glow);
     }
 
     .btn-unlock {
       width: 100%;
-      background: linear-gradient(135deg, var(--primary), #b45309);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04;
+      border: 1px solid var(--gold-light);
       border-radius: 12px;
       padding: 14px;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 15px var(--gold-glow);
+      transition: all 0.25s ease;
+      font-family: var(--font);
+    }
+
+    .btn-unlock:hover {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 22px rgba(245, 215, 127, 0.5);
     }
 
     /* ================= الواجهة الرئيسية للوحة التحكم ================= */
@@ -129,43 +186,47 @@
       min-height: 100vh;
     }
 
-    /* الشريط الجانبي */
+    /* الشريط الجانبي الفخم */
     .sidebar {
-      width: 260px;
+      width: 270px;
       background: var(--sidebar-bg);
-      border-left: 1px solid var(--card-border);
+      border-left: 1.5px solid var(--card-border);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
     }
 
     .sidebar-brand {
       padding: 24px 20px;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1.5px solid rgba(212, 175, 55, 0.2);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      background: linear-gradient(180deg, rgba(46, 24, 12, 0.8) 0%, transparent 100%);
     }
 
     .brand-title-admin {
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      line-height: 1.2;
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--gold-light);
+      line-height: 1.3;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
     }
 
     .brand-sub-admin {
-      font-size: 11px;
-      color: var(--accent-gold);
-      font-weight: 600;
+      font-size: 11.5px;
+      color: var(--brass);
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     .nav-list {
       list-style: none;
-      padding: 16px 12px;
+      padding: 18px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       flex: 1;
     }
 
@@ -173,49 +234,66 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 16px;
+      padding: 13px 16px;
       border-radius: 12px;
-      color: var(--text-muted);
-      font-size: 14px;
+      color: var(--cream-dim);
+      font-size: 14.5px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.22s ease;
+      border: 1px solid transparent;
     }
 
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
+      background: rgba(84, 47, 26, 0.45);
+      border-color: rgba(212, 175, 55, 0.25);
+      color: var(--gold-light);
+      transform: translateX(-3px);
     }
 
     .nav-item.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04 !important;
+      font-weight: 900;
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 15px var(--gold-glow);
+    }
+
+    .nav-item.active span {
+      color: #140a04 !important;
     }
 
     .nav-badge {
       margin-right: auto;
-      background: var(--danger);
-      color: #fff;
+      background: rgba(18, 9, 4, 0.7);
+      color: var(--gold-light);
       font-size: 11px;
       font-weight: 800;
-      padding: 2px 7px;
+      padding: 3px 9px;
       border-radius: 10px;
+      border: 1px solid rgba(212, 175, 55, 0.35);
+    }
+
+    .nav-item.active .nav-badge {
+      background: #140a04;
+      color: var(--gold-light);
+      border-color: #140a04;
     }
 
     .sidebar-footer {
-      padding: 16px;
-      border-top: 1px solid var(--card-border);
+      padding: 18px;
+      border-top: 1.5px solid rgba(212, 175, 55, 0.2);
+      background: linear-gradient(0deg, rgba(46, 24, 12, 0.8) 0%, transparent 100%);
     }
 
     .btn-catalog-preview {
       width: 100%;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--card-border);
-      color: #fff;
-      padding: 10px;
+      background: rgba(58, 30, 15, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: var(--gold-light);
+      padding: 11px;
       border-radius: 10px;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -223,11 +301,14 @@
       justify-content: center;
       gap: 8px;
       text-decoration: none;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
     }
 
     .btn-catalog-preview:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(84, 47, 26, 0.95);
+      border-color: var(--gold-light);
+      color: #fff;
     }
 
     /* منطقة المحتوى */
@@ -240,9 +321,9 @@
     }
 
     .top-header {
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--card-border);
+      background: var(--topbar-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1.5px solid var(--card-border);
       padding: 16px 28px;
       display: flex;
       align-items: center;
@@ -250,12 +331,17 @@
       position: sticky;
       top: 0;
       z-index: 40;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
     .page-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #fff;
+      font-size: 21px;
+      font-weight: 900;
+      color: var(--gold-light);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .header-actions {
@@ -269,7 +355,7 @@
       width: 100%;
     }
 
-    /* كروت الإحصائيات */
+    /* كروت الإحصائيات (كروت خشبية مذهبة) */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -278,37 +364,60 @@
     }
 
     .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: linear-gradient(145deg, rgba(46, 24, 12, 0.9) 0%, rgba(26, 13, 6, 0.95) 100%);
+      border: 1.5px solid var(--card-border);
       border-radius: var(--radius);
       padding: 20px;
       display: flex;
       align-items: center;
       gap: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(245, 215, 127, 0.15);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold-light);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.2);
     }
 
     .stat-icon-wrap {
-      width: 50px;
-      height: 50px;
+      width: 52px;
+      height: 52px;
       border-radius: 14px;
-      background: rgba(217, 119, 6, 0.15);
-      color: var(--primary);
+      background: linear-gradient(135deg, rgba(84, 47, 26, 0.8) 0%, rgba(32, 16, 8, 0.9) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: var(--gold-light);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
     .stat-val {
       font-size: 26px;
       font-weight: 900;
-      color: #fff;
+      color: #ffffff;
       line-height: 1.1;
+      font-feature-settings: "tnum";
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .stat-label {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--brass);
+      font-weight: 700;
       margin-top: 4px;
     }
 
@@ -323,32 +432,35 @@
     }
 
     .btn-primary-action {
-      background: linear-gradient(135deg, var(--primary), #b45309);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04;
+      border: 1px solid var(--gold-light);
       padding: 11px 20px;
-      border-radius: 10px;
+      border-radius: 11px;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
-      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px var(--gold-glow);
+      transition: all 0.22s ease;
+      font-family: var(--font);
     }
 
     .btn-primary-action:hover {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%);
       transform: translateY(-2px);
-      filter: brightness(1.1);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 18px rgba(245, 215, 127, 0.5);
     }
 
     /* الجداول */
     .table-container {
       background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
       border-radius: var(--radius);
       overflow-x: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
     table {
@@ -358,23 +470,27 @@
     }
 
     th {
-      background: rgba(0, 0, 0, 0.25);
+      background: linear-gradient(180deg, #3d2010 0%, #241208 100%);
       padding: 14px 18px;
-      font-size: 13px;
-      color: var(--text-muted);
-      font-weight: 700;
-      border-bottom: 1px solid var(--card-border);
+      font-size: 13.5px;
+      color: var(--gold-light);
+      font-weight: 800;
+      border-bottom: 2px solid var(--gold-primary);
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
     }
 
     td {
       padding: 14px 18px;
       font-size: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+      background: rgba(24, 12, 6, 0.6);
+      color: var(--cream);
       vertical-align: middle;
     }
 
     tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(84, 47, 26, 0.35);
     }
 
     /* أكواد العملاء وبطاقاتها */
@@ -382,20 +498,21 @@
       font-family: monospace;
       font-size: 15px;
       font-weight: 800;
-      background: #0f172a;
-      border: 1px solid var(--card-border);
+      background: rgba(18, 9, 4, 0.9);
+      border: 1px solid rgba(212, 175, 55, 0.4);
       padding: 6px 12px;
       border-radius: 8px;
-      color: var(--accent-gold);
+      color: var(--gold-light);
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .copy-btn {
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--brass);
       cursor: pointer;
       font-size: 14px;
       padding: 2px;
@@ -403,7 +520,7 @@
     }
 
     .copy-btn:hover {
-      color: #fff;
+      color: var(--gold-light);
     }
 
     /* سويتش التفعيل / الإيقاف */
@@ -417,7 +534,8 @@
     .switch-box {
       width: 44px;
       height: 24px;
-      background: #475569;
+      background: rgba(62, 33, 17, 0.8);
+      border: 1px solid rgba(212, 175, 55, 0.3);
       border-radius: 12px;
       position: relative;
       transition: background 0.2s;
@@ -430,13 +548,15 @@
       height: 18px;
       background: #fff;
       border-radius: 50%;
-      top: 3px;
+      top: 2px;
       left: 3px;
       transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     .switch-active .switch-box {
       background: var(--success);
+      border-color: var(--success);
     }
 
     .switch-active .switch-box::after {
@@ -448,80 +568,114 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(14, 7, 3, 0.85);
       z-index: 200;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
     }
 
     .modal-card {
-      background: var(--sidebar-bg);
-      border: 1px solid var(--card-border);
+      background: linear-gradient(145deg, rgba(38, 20, 10, 0.98) 0%, rgba(20, 10, 5, 0.99) 100%);
+      border: 1.5px solid var(--card-border);
       border-radius: 20px;
-      max-width: 560px;
+      max-width: 580px;
       width: 100%;
-      padding: 28px;
+      padding: 30px;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+      position: relative;
+    }
+
+    .modal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), var(--gold-light), var(--gold-primary), transparent);
     }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 12px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 14px;
     }
 
     .modal-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
+      font-size: 19px;
+      font-weight: 900;
+      color: var(--gold-light);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
     }
 
+    /* الخانات وحقول الإدخال الفخمة */
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
     }
 
     .form-label {
       display: block;
-      font-size: 13px;
-      color: var(--text-muted);
+      font-size: 13.5px;
+      color: var(--brass);
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 2px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
     }
 
-    .form-input, .form-select, .form-textarea {
+    .form-input, .form-select, .form-textarea, .pin-input, input[type="text"], input[type="password"], input[type="number"], select, textarea {
       width: 100%;
-      background: #0b0f19;
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 11px 14px;
-      color: #fff;
-      font-size: 14px;
+      background: rgba(18, 9, 4, 0.92);
+      border: 1.5px solid rgba(212, 175, 55, 0.38);
+      border-radius: 11px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-size: 14.5px;
+      font-weight: 600;
+      font-family: var(--font);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
+      transition: all 0.25s ease;
+      outline: none;
     }
 
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none;
-      border-color: var(--primary);
+    .form-input::placeholder, .form-textarea::placeholder, .pin-input::placeholder, input::placeholder, textarea::placeholder {
+      color: rgba(197, 160, 89, 0.45);
+      font-weight: 500;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus, .pin-input:focus, input:focus, select:focus, textarea:focus {
+      border-color: var(--gold-light);
+      background: rgba(28, 14, 7, 0.98);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 14px var(--gold-glow);
+    }
+
+    .form-select option {
+      background: #241209;
+      color: var(--cream);
+      padding: 10px;
     }
 
     .img-upload-dropzone {
-      border: 2px dashed var(--card-border);
+      border: 2px dashed rgba(212, 175, 55, 0.45);
       border-radius: 12px;
-      padding: 20px;
+      padding: 22px;
       text-align: center;
       cursor: pointer;
-      background: rgba(0, 0, 0, 0.2);
-      transition: border-color 0.2s;
+      background: rgba(18, 9, 4, 0.7);
+      transition: all 0.25s ease;
     }
 
     .img-upload-dropzone:hover {
-      border-color: var(--primary);
+      border-color: var(--gold-light);
+      background: rgba(36, 18, 9, 0.85);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
     }
 
     .preview-thumb {
@@ -529,6 +683,7 @@
       border-radius: 8px;
       margin-top: 10px;
       display: none;
+      border: 1px solid var(--gold-primary);
     }
 
     .modal-actions {
@@ -536,19 +691,32 @@
       justify-content: flex-end;
       gap: 12px;
       margin-top: 24px;
-      border-top: 1px solid var(--card-border);
-      padding-top: 16px;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+      padding-top: 18px;
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      border: 1px solid var(--card-border);
+      background: linear-gradient(180deg, rgba(62, 35, 20, 0.85) 0%, rgba(35, 18, 9, 0.95) 100%);
+      color: var(--cream);
+      border: 1px solid rgba(212, 175, 55, 0.35);
       padding: 10px 18px;
-      border-radius: 10px;
+      border-radius: 11px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(84, 47, 26, 0.95);
+      border-color: var(--gold-light);
+      color: #ffffff;
+      transform: translateY(-1px);
     }
 
     /* تصنيفات الطلبات */
@@ -561,9 +729,9 @@
     }
 
     .status-new { background: rgba(56, 189, 248, 0.2); color: var(--info); border: 1px solid rgba(56, 189, 248, 0.3); }
-    .status-progress { background: rgba(217, 119, 6, 0.2); color: var(--accent-gold); border: 1px solid rgba(217, 119, 6, 0.3); }
-    .status-ready { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-cancelled { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-progress { background: rgba(212, 175, 55, 0.2); color: var(--gold-light); border: 1px solid rgba(212, 175, 55, 0.3); }
+    .status-ready { background: rgba(46, 189, 111, 0.2); color: var(--success); border: 1px solid rgba(46, 189, 111, 0.3); }
+    .status-cancelled { background: rgba(224, 79, 79, 0.2); color: var(--danger); border: 1px solid rgba(224, 79, 79, 0.3); }
 
     /* تفاصيل الطلب */
     .order-items-table {
@@ -580,7 +748,7 @@
       .sidebar {
         width: 100%;
         border-left: none;
-        border-bottom: 1px solid var(--card-border);
+        border-bottom: 1.5px solid var(--card-border);
       }
       .sidebar-brand {
         padding: 12px 16px;
@@ -617,7 +785,7 @@
         gap: 10px;
       }
       .stat-card {
-        padding: 12px;
+        padding: 14px;
       }
       .stat-val {
         font-size: 20px;
@@ -848,19 +1016,19 @@
           <!-- بطاقتان بارزتان: رابط الأدمن ورابط العميل للنسخ والتحميل -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <!-- 1) بطاقة رابط الأدمن -->
-            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), #0f172a); border: 2px solid var(--primary); border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="background: linear-gradient(135deg, rgba(46, 24, 12, 0.95), rgba(20, 10, 5, 0.98)); border: 1.5px solid var(--gold-primary); border-radius: 16px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(212,175,55,0.15); position: relative; overflow: hidden;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 26px;">👔</span>
+                  <span style="font-size: 28px;">👔</span>
                   <div>
-                    <h3 style="font-size: 16px; font-weight: 800; color: #fff;">رابط لوحة الأدمن (لموبايلي والمديرين)</h3>
-                    <div style="font-size: 12px; color: var(--accent-gold);">لتنزيل شاشة الإدارة والتحكم على الموبايل</div>
+                    <h3 style="font-size: 16px; font-weight: 800; color: var(--gold-light);">رابط لوحة الأدمن (لموبايلي والمديرين)</h3>
+                    <div style="font-size: 12px; color: var(--brass);">لتنزيل شاشة الإدارة والتحكم على الموبايل</div>
                   </div>
                 </div>
-                <span style="background: rgba(217, 119, 6, 0.2); color: var(--accent-gold); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(217, 119, 6, 0.4);">خاص بالإدارة</span>
+                <span style="background: rgba(212, 175, 55, 0.15); color: var(--gold-light); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.4);">خاص بالإدارة</span>
               </div>
 
-              <div style="background: #0b0f19; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: #38bdf8; direction: ltr; text-align: left; word-break: break-all; margin-bottom: 12px;" id="boxAdminUrl">
+              <div style="background: rgba(18, 9, 4, 0.95); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 12px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: var(--gold-light); direction: ltr; text-align: left; word-break: break-all; margin-bottom: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);" id="boxAdminUrl">
                 جاري التحميل...
               </div>
 
@@ -875,24 +1043,24 @@
             </div>
 
             <!-- 2) بطاقة رابط العميل والعامل -->
-            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), #0f172a); border: 2px solid var(--success); border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="background: linear-gradient(135deg, rgba(46, 24, 12, 0.95), rgba(20, 10, 5, 0.98)); border: 1.5px solid var(--success); border-radius: 16px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(46,189,111,0.15); position: relative; overflow: hidden;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 26px;">🛋️</span>
+                  <span style="font-size: 28px;">🛋️</span>
                   <div>
                     <h3 style="font-size: 16px; font-weight: 800; color: #fff;">رابط المعرض (للعميل والعامل)</h3>
                     <div style="font-size: 12px; color: #4ade80;">لتنزيل الكتالوج والطلب على موبايل العميل</div>
                   </div>
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.4);">للعملاء والعمال</span>
+                <span style="background: rgba(46, 189, 111, 0.15); color: #4ade80; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(46, 189, 111, 0.4);">للعملاء والعمال</span>
               </div>
 
-              <div style="background: #0b0f19; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: #4ade80; direction: ltr; text-align: left; word-break: break-all; margin-bottom: 12px;" id="boxCatalogUrl">
+              <div style="background: rgba(18, 9, 4, 0.95); border: 1.5px solid rgba(46, 189, 111, 0.35); border-radius: 10px; padding: 12px 14px; font-family: monospace; font-size: 13px; font-weight: 700; color: #4ade80; direction: ltr; text-align: left; word-break: break-all; margin-bottom: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);" id="boxCatalogUrl">
                 جاري التحميل...
               </div>
 
               <div style="display: flex; gap: 8px;">
-                <button class="btn-primary-action" style="flex: 1; justify-content: center; font-size: 13px; padding: 10px; background: linear-gradient(135deg, #10b981, #059669);" onclick="copyUnifiedUrl('catalog')">
+                <button class="btn-primary-action" style="flex: 1; justify-content: center; font-size: 13px; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); border-color: #34d399;" onclick="copyUnifiedUrl('catalog')">
                   📋 نسخ رابط العميل
                 </button>
                 <button class="btn-secondary" style="padding: 10px 14px; font-size: 13px; font-weight: 700;" onclick="showCatalogQr()">
@@ -932,8 +1100,9 @@
 
         <!-- ================= تبويب 4: الإعدادات ================= -->
         <div id="tabSettings" class="tab-pane" style="display: none;">
-          <div style="max-width: 600px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 28px;">
-            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px; color: #fff;">إعدادات المعرض وبيانات الاتصال</h3>
+          <div style="max-width: 620px; background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: var(--radius); padding: 30px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold-primary), var(--gold-light), var(--gold-primary), transparent);"></div>
+            <h3 style="font-size: 19px; font-weight: 900; margin-bottom: 22px; color: var(--gold-light); text-shadow: 0 2px 4px rgba(0,0,0,0.6);">⚙️ إعدادات المعرض وبيانات الاتصال</h3>
 
             <form onsubmit="saveSettings(event)">
               <div class="form-group">
@@ -941,13 +1110,13 @@
                 <input type="text" id="settingShowroomName" class="form-input" required>
               </div>
 
-              <div class="form-group" style="background: #090d16; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 18px;">
+              <div class="form-group" style="background: rgba(18, 9, 4, 0.92); border: 1.5px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                   <div>
-                    <label class="form-label" style="margin-bottom: 2px; font-weight: 800; color: #fff;">📱 أرقام واتساب لاستلام ومتابعة الطلبات</label>
-                    <div style="font-size: 11px; color: var(--text-muted);">تقدر تضيف أكثر من رقم (مبيعات، إدارة، حسابات) - النظام يصحح الأرقام تلقائياً</div>
+                    <label class="form-label" style="margin-bottom: 2px; font-weight: 800; color: var(--gold-light);">📱 أرقام واتساب لاستلام ومتابعة الطلبات</label>
+                    <div style="font-size: 11.5px; color: var(--brass);">تقدر تضيف أكثر من رقم (مبيعات، إدارة، حسابات) - النظام يصحح الأرقام تلقائياً</div>
                   </div>
-                  <button type="button" class="btn-secondary" onclick="addSettingWhatsappRow()" style="font-size: 12px; padding: 5px 12px; border-color: rgba(34,197,94,0.4); color: #22c55e; font-weight: 700;">
+                  <button type="button" class="btn-secondary" onclick="addSettingWhatsappRow()" style="font-size: 12px; padding: 6px 14px; border-color: rgba(212, 175, 55, 0.4); color: var(--gold-light); font-weight: 800;">
                     ➕ إضافة رقم واتساب
                   </button>
                 </div>
@@ -967,7 +1136,7 @@
                 <input type="password" id="settingAdminPin" class="form-input" placeholder="1234" required>
               </div>
 
-              <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; margin-top: 12px;">
+              <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; margin-top: 14px;">
                 حفظ الإعدادات ✓
               </button>
             </form>
@@ -1185,17 +1354,17 @@
   </div>
 
   <!-- ================= تنبيه فوري بوصول طلبية جديدة (صوت وبانر) ================= -->
-  <div id="orderNotificationToast" style="display: none; position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 999999; width: calc(100% - 32px); max-width: 540px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--accent-gold); border-radius: 16px; padding: 16px 20px; box-shadow: 0 20px 45px rgba(0,0,0,0.85);">
+  <div id="orderNotificationToast" style="display: none; position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 999999; width: calc(100% - 32px); max-width: 540px; background: linear-gradient(135deg, rgba(46, 24, 12, 0.98), rgba(20, 10, 5, 0.99)); border: 2px solid var(--gold-light); border-radius: 16px; padding: 16px 20px; box-shadow: 0 20px 45px rgba(0,0,0,0.85), 0 0 25px var(--gold-glow);">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 32px;">🛎️</span>
+        <span style="font-size: 32px; filter: drop-shadow(0 0 10px var(--gold-glow));">🛎️</span>
         <div>
-          <div style="font-size: 15px; font-weight: 800; color: var(--accent-gold);" id="orderToastTitle">📦 طلبية جديدة وصلت الآن!</div>
-          <div style="font-size: 13px; color: #fff; margin-top: 3px;" id="orderToastBody">أرسل أحد العملاء طلبية جديدة</div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--gold-light);" id="orderToastTitle">📦 طلبية جديدة وصلت الآن!</div>
+          <div style="font-size: 13px; color: var(--cream);" id="orderToastBody">أرسل أحد العملاء طلبية جديدة</div>
         </div>
       </div>
       <div style="display: flex; gap: 8px; margin-right: auto;">
-        <button class="btn-primary-action" style="padding: 9px 14px; font-size: 13px; background: linear-gradient(135deg, var(--primary), #b45309);" onclick="viewIncomingOrder()">
+        <button class="btn-primary-action" style="padding: 9px 14px; font-size: 13px;" onclick="viewIncomingOrder()">
           عرض الطلبية 👁️
         </button>
         <button class="btn-secondary" style="padding: 9px 12px; font-size: 14px;" onclick="closeOrderToast()">

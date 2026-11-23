@@ -15,38 +15,67 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/logo-256.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0b0f19">
+  <meta name="theme-color" content="#120a05">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #151c2e;
-      --card-border: #232d42;
-      --primary: #d97706;
-      --primary-hover: #b45309;
-      --primary-light: rgba(217, 119, 6, 0.15);
-      --accent-gold: #fbbf24;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --success: #10b981;
-      --danger: #ef4444;
+      --wood-dark: #120a05;
+      --wood-deep: #1d0f07;
+      --wood-med: #2c160a;
+      --wood-light: #442311;
+      --gold-primary: #d4af37;
+      --gold-light: #f5d77f;
+      --gold-dark: #997316;
+      --gold-glow: rgba(212, 175, 55, 0.38);
+      --brass: #c5a059;
+      --cream: #fbf7ee;
+      --cream-dim: #d8cebe;
+      
+      --bg: #120a05;
+      --card-bg: rgba(30, 16, 8, 0.94);
+      --card-border: rgba(212, 175, 55, 0.3);
+      --card-border-glow: rgba(245, 215, 127, 0.5);
+      --primary: #d4af37;
+      --primary-hover: #f5d77f;
+      --primary-light: rgba(212, 175, 55, 0.25);
+      --accent-gold: #f5d77f;
+      --text-main: #fbf7ee;
+      --text-muted: #c5a059;
+      --success: #2ebd6f;
+      --danger: #e04f4f;
       --radius: 16px;
+      --font: 'Cairo', 'Segoe UI', Tahoma, system-ui, -apple-system, sans-serif;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: var(--bg);
+      background-color: var(--wood-dark);
+      background-image: 
+        radial-gradient(ellipse at 50% 12%, rgba(84, 47, 26, 0.6) 0%, rgba(18, 10, 5, 0.98) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(0, 0, 0, 0.04) 2px, transparent 4px, transparent 24px),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0px, transparent 1px, transparent 120px);
+      background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
+
+    /* شريط التمرير الفخم */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(18, 10, 5, 0.8); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gold-primary); }
 
     /* ================= شاشة البوابة (تسجيل الدخول المقفول) ================= */
     #gateScreen {
@@ -56,18 +85,19 @@
       justify-content: center;
       min-height: 100vh;
       padding: 24px;
-      background: radial-gradient(circle at top, #1e293b 0%, #0b0f19 100%);
+      background: radial-gradient(ellipse at center, rgba(62, 33, 17, 0.9) 0%, rgba(18, 10, 5, 0.98) 100%);
+      backdrop-filter: blur(10px);
     }
 
     .gate-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: linear-gradient(145deg, rgba(38, 20, 10, 0.96) 0%, rgba(22, 11, 5, 0.98) 100%);
+      border: 1.5px solid var(--card-border);
       border-radius: 24px;
-      padding: 40px 32px;
+      padding: 42px 34px;
       width: 100%;
       max-width: 440px;
       text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
       position: relative;
       overflow: hidden;
     }
@@ -78,8 +108,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary), var(--accent-gold), var(--primary));
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), var(--gold-light), var(--gold-primary), transparent);
     }
 
     .gate-icon {
@@ -87,6 +117,7 @@
       margin-bottom: 16px;
       display: inline-block;
       animation: floatIcon 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 16px var(--gold-glow));
     }
 
     @keyframes floatIcon {
@@ -96,15 +127,16 @@
 
     .gate-title {
       font-size: 24px;
-      font-weight: 800;
+      font-weight: 900;
       margin-bottom: 8px;
-      color: #fff;
+      color: var(--gold-light);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
     }
 
     .gate-subtitle {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin-bottom: 28px;
+      color: var(--brass);
+      font-size: 13.5px;
+      margin-bottom: 26px;
       line-height: 1.6;
     }
 
@@ -115,22 +147,24 @@
 
     .passcode-input {
       width: 100%;
-      background: #0b0f19;
-      border: 2px solid var(--card-border);
+      background: rgba(18, 9, 4, 0.92);
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
       border-radius: 14px;
       padding: 16px 48px 16px 20px;
       font-size: 18px;
       color: #fff;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 2px;
       text-align: center;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
       transition: all 0.25s;
     }
 
     .passcode-input:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-light);
+      border-color: var(--gold-light);
+      background: rgba(28, 14, 7, 0.98);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 14px var(--gold-glow);
     }
 
     .passcode-toggle {
@@ -140,7 +174,7 @@
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--brass);
       cursor: pointer;
       font-size: 20px;
       padding: 4px;
@@ -148,21 +182,22 @@
 
     .btn-enter {
       width: 100%;
-      background: linear-gradient(135deg, var(--primary), #b45309);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04;
+      border: 1px solid var(--gold-light);
       border-radius: 14px;
       padding: 16px;
       font-size: 17px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.4);
-      transition: all 0.2s;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 15px var(--gold-glow);
+      transition: all 0.22s;
     }
 
     .btn-enter:hover {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%);
       transform: translateY(-2px);
-      box-shadow: 0 14px 25px -5px rgba(217, 119, 6, 0.5);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 22px rgba(245, 215, 127, 0.5);
     }
 
     .btn-enter:active {
@@ -173,15 +208,15 @@
       margin-top: 14px;
       color: var(--danger);
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       display: none;
     }
 
     .gate-hint {
       margin-top: 24px;
       font-size: 13px;
-      color: #64748b;
-      border-top: 1px dashed var(--card-border);
+      color: var(--brass);
+      border-top: 1px dashed rgba(212, 175, 55, 0.25);
       padding-top: 18px;
     }
 
@@ -197,14 +232,15 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background: rgba(15, 23, 42, 0.92);
+      background: rgba(26, 13, 6, 0.95);
       backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1.5px solid var(--card-border);
       padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
     .brand-section {
@@ -215,13 +251,15 @@
 
     .brand-logo {
       font-size: 26px;
+      filter: drop-shadow(0 0 8px var(--gold-glow));
     }
 
     .brand-title {
       font-size: 17px;
-      font-weight: 800;
-      color: #fff;
+      font-weight: 900;
+      color: var(--gold-light);
       line-height: 1.2;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
     }
 
     .client-badge {
@@ -229,11 +267,12 @@
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: var(--accent-gold);
-      background: rgba(251, 191, 36, 0.1);
-      padding: 3px 10px;
+      color: var(--gold-light);
+      background: rgba(212, 175, 55, 0.12);
+      padding: 4px 12px;
       border-radius: 20px;
-      border: 1px solid rgba(251, 191, 36, 0.25);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      font-weight: 700;
     }
 
     .topbar-actions {
@@ -244,9 +283,9 @@
 
     .notif-btn {
       position: relative;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--accent-gold);
-      border: 1px solid var(--card-border);
+      background: rgba(58, 30, 15, 0.85);
+      color: var(--gold-light);
+      border: 1px solid rgba(212, 175, 55, 0.35);
       padding: 10px 14px;
       border-radius: 12px;
       font-size: 15px;
@@ -259,8 +298,8 @@
     }
 
     .notif-btn:hover {
-      background: rgba(251, 191, 36, 0.15);
-      border-color: var(--accent-gold);
+      background: rgba(84, 47, 26, 0.95);
+      border-color: var(--gold-light);
       transform: scale(1.02);
     }
 
@@ -284,30 +323,31 @@
 
     .cart-btn {
       position: relative;
-      background: linear-gradient(135deg, var(--primary), #b45309);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04;
+      border: 1px solid var(--gold-light);
       padding: 10px 16px;
       border-radius: 12px;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
-      transition: transform 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px var(--gold-glow);
+      transition: all 0.2s;
     }
 
     .cart-btn:hover {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%);
       transform: scale(1.03);
     }
 
     .cart-counter {
-      background: #fff;
-      color: #b45309;
+      background: #140a04;
+      color: var(--gold-light);
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       min-width: 20px;
       height: 20px;
       border-radius: 10px;
@@ -315,12 +355,13 @@
       align-items: center;
       justify-content: center;
       padding: 0 5px;
+      border: 1px solid var(--gold-primary);
     }
 
     .logout-btn {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      border: 1px solid var(--card-border);
+      background: rgba(58, 30, 15, 0.85);
+      color: var(--brass);
+      border: 1px solid rgba(212, 175, 55, 0.35);
       padding: 9px 13px;
       border-radius: 12px;
       font-size: 13px;
@@ -329,14 +370,14 @@
     }
 
     .logout-btn:hover {
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(224, 79, 79, 0.2);
       color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.3);
+      border-color: rgba(224, 79, 79, 0.4);
     }
 
     /* شريط الترحيب والبحث */
     .hero-banner {
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.5) 0%, transparent 100%);
+      background: linear-gradient(180deg, rgba(46, 24, 12, 0.6) 0%, transparent 100%);
       padding: 24px 20px 16px 20px;
       max-width: 1280px;
       margin: 0 auto;
@@ -345,9 +386,9 @@
 
     .welcome-text {
       font-size: 15px;
-      color: #cbd5e1;
+      color: var(--cream-dim);
       margin-bottom: 16px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .search-row {
@@ -358,18 +399,22 @@
 
     .search-input {
       flex: 1;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: rgba(18, 9, 4, 0.92);
+      border: 1.5px solid rgba(212, 175, 55, 0.38);
       border-radius: 14px;
       padding: 12px 18px;
       color: #fff;
       font-size: 14px;
-      transition: border-color 0.2s;
+      font-family: var(--font);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
+      transition: all 0.25s;
     }
 
     .search-input:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: var(--gold-light);
+      background: rgba(28, 14, 7, 0.98);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 14px var(--gold-glow);
     }
 
     /* تصنيفات الأقسام */
@@ -386,28 +431,30 @@
     }
 
     .cat-pill {
-      background: var(--card-bg);
-      color: var(--text-muted);
-      border: 1px solid var(--card-border);
+      background: rgba(42, 22, 11, 0.85);
+      color: var(--brass);
+      border: 1px solid rgba(212, 175, 55, 0.3);
       padding: 8px 18px;
       border-radius: 30px;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 13.5px;
+      font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .cat-pill:hover {
-      color: #fff;
-      border-color: #475569;
+      background: rgba(70, 37, 18, 0.95);
+      color: var(--gold-light);
+      border-color: var(--gold-light);
     }
 
     .cat-pill.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px var(--primary-light);
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #b8860b 50%, var(--gold-dark) 100%);
+      color: #140a04;
+      font-weight: 900;
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 12px var(--gold-glow);
     }
 
     /* شبكة الموديلات المعروضة */
@@ -426,19 +473,20 @@
     }
 
     .product-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: linear-gradient(145deg, rgba(38, 20, 10, 0.92) 0%, rgba(22, 11, 5, 0.96) 100%);
+      border: 1.5px solid var(--card-border);
       border-radius: 20px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(245, 215, 127, 0.1);
       transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
     }
 
     .product-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5);
-      border-color: #3b4866;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.2);
+      border-color: var(--gold-light);
     }
 
     .product-img-wrap {

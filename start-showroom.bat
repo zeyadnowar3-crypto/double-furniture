@@ -6,6 +6,5 @@ echo    🛋️ جاري تشغيل سيرفر معرض الأثاث الخاص.
 echo ====================================================
 cd /d "%~dp0"
 
-start http://localhost:4000/admin
 node server.js
 pause

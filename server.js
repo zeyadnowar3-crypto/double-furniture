@@ -77,15 +77,10 @@ function getTunnelUrl() {
   if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   if (process.env.RAILWAY_STATIC_URL) return `https://${process.env.RAILWAY_STATIC_URL}`;
   if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL;
+  const custom = getSetting('custom_public_url');
+  if (custom && custom.startsWith('http')) return custom;
   if (currentTunnelUrl) return currentTunnelUrl;
-  const tunnelFile = path.join(__dirname, 'public', 'tunnel-url.txt');
-  if (fs.existsSync(tunnelFile)) {
-    try {
-      const u = fs.readFileSync(tunnelFile, 'utf8').trim();
-      if (u && u.startsWith('http')) return u;
-    } catch (e) {}
-  }
-  return null;
+  return 'https://double-furniture-showroom-production.up.railway.app';
 }
 
 function startCloudflareTunnel() {
@@ -206,7 +201,11 @@ app.get('/api/server-info', (req, res) => {
 // ================= دوال التحقق والحماية =================
 function authenticateClient(req) {
   try {
-    const code = req.headers['x-client-passcode'] || req.query.code || (req.body && req.body.passcode);
+    const authHeader = req.headers['authorization'];
+    let code = req.headers['x-client-passcode'] || req.query.code || (req.body && req.body.passcode);
+    if (!code && authHeader && authHeader.startsWith('Bearer ')) {
+      code = authHeader.slice(7).trim();
+    }
     if (!code) return null;
     const normalized = String(code).trim();
     const client = db.prepare('SELECT * FROM clients WHERE LOWER(passcode) = LOWER(?) AND is_active = 1').get(normalized);
@@ -222,7 +221,11 @@ function authenticateClient(req) {
 
 function authenticateAdmin(req) {
   try {
-    const token = req.headers['x-admin-token'];
+    const authHeader = req.headers['authorization'];
+    let token = req.headers['x-admin-token'];
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice(7).trim();
+    }
     if (token) {
       const parts = String(token).split(':');
       if (parts.length >= 2) {
